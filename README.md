@@ -9,25 +9,26 @@ All code works with Python2.7 and Python3.x.
 ## Project Links
 
 - Downloads: <https://github.com/ajgillis/py-stcrestclient>
-- Documentation: See "Spirent TestCenter Automation Programmer's Reference"
+- Documentation: See *Spirent TestCenter Automation Programmer's Reference*
 
 ## Quick Start
 - Install stcrestclient:
-> `sudo pip install https://github.com/ajgillis/py-stcrestclient/archive/master.zip`
+
+   `sudo pip install https://github.com/ajgillis/py-stcrestclient/archive/master.zip`
 
 - Write Python code to talk with TestCenter server
->`python`
 
-    >`    >>> from stcrestclient import stchttp`
-
-    >`    >>> stc = stchttp.StcHttp('stcserver.somewhere.com')`
-
-    >`    >>> sid = stc.new_session('JoeUser', 'ExampleTest')`
-
-    >`    >>> stc.system_info()`
+   `python`
+   ```python
+   >>> from stcrestclient import stchttp
+   >>> stc = stchttp.StcHttp('stcserver.somewhere.com')
+   >>> sid = stc.new_session('JoeUser', 'ExampleTest')
+   >>> stc.system_info()
+   ```
 
 - Interact with TestCenter server
->`python -m stcrestclient.tccsh`
+
+   `python -m stcrestclient.tccsh`
 
 ## Installation
 
