@@ -1,4 +1,4 @@
-# Python STC ReST API Client Library: stcrestclient
+# Python STC ReST API Client: stcrestclient
 
 The stcrestclient package provides the stchttp.py ReST API wrapper module.  This allows simple function calls, nearly identical to those provided by StcPython.py, to be used to access TestCenter server sessions via the STC ReST API.
 
@@ -51,10 +51,10 @@ The stcrestclient package is installed from source using distutils in the usual 
 
     wget https://github.com/ajgillis/py-stcrestclient/archive/master.zip py-stcrestclient.zip
     unzip py-stcrestclient.zip
-    cd py-stcreatclient-*
+    cd py-stcrestclient-*
     sudo python setup.py install
 
-## Usage stchttp
+## Using the stchttp module
 
 To use the STC ReST client library, import the `stchttp.py` module, create a new session or join an existing session, and then call the STC API automation functions provided by the module.
 
@@ -135,4 +135,4 @@ Use <TAB> for command auto-completion. Command auto-completion may not work on W
 
 ## Requirements
 
-- Python 2.7 or greater
+- Python2.7 or Python3.x
