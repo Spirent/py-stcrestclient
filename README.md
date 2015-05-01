@@ -4,10 +4,12 @@ The stcrestclient package provides the stchttp.py ReST API wrapper module.  This
 
 The stcrestclient package also includes the commandline shell `tccsh` that lets you work interactively with remote STC sessions via the ReST API.
 
+All code works with Python2.7 and Python3.x.
+
 ## Project Links
 
 - Downloads: <https://github.com/ajgillis/py-stcrestclient>
-- Documentation: <http://mercurial.cal.ci.spirentcom.com/StcRestApi/file/tip/doc>
+- Documentation: See "Spirent TestCenter Automation Programmer's Reference"
 
 ## Quick Start
 - Install stcrestclient:
@@ -55,49 +57,51 @@ The stcrestclient package is installed from source using distutils in the usual 
 
 To use the STC ReST client library, import the `stchttp.py` module, create a new session or join an existing session, and then call the STC API automation functions provided by the module.
 
-    from stcrestclient import stchttp
-    stc = stchttp.StcHttp('stcserver.somewhere.com')
+```python
+from stcrestclient import stchttp
+stc = stchttp.StcHttp('stcserver.somewhere.com')
 
-    # Create new session
-    sid = stc.new_session('JoeUser', 'ExampleTest')
+# Create new session
+sid = stc.new_session('JoeUser', 'ExampleTest')
 
-    # Get system information
-    stc.system_info()
+# Get system information
+stc.system_info()
 
-    # Create a Project
-    project = stc.create('project')
+# Create a Project
+project = stc.create('project')
 
-    # Create Port under project
-    port_handle = stc.create('port', project)
+# Create Port under project
+port_handle = stc.create('port', project)
 
-    # Connect to a chassis
-    stc.connect('172.16.23.54')
+# Connect to a chassis
+stc.connect('172.16.23.54')
 
-    # Configure port location
-    stc.config(port_handle, {'location': "//172.16.23.54/1/1"})
+# Configure port location
+stc.config(port_handle, {'location': "//172.16.23.54/1/1"})
 
-    # Create StreamBlock under Port
-    sb_handle = stc.create('streamBlock', port_handle)
+# Create StreamBlock under Port
+sb_handle = stc.create('streamBlock', port_handle)
 
-    # Apply config
-    stc.apply()
+# Apply config
+stc.apply()
 
-    # Run STAK command to archive log files
-    stc.perform('spirent.core.ArchiveDiagnosticLogsCommand')
+# Run STAK command to archive log files
+stc.perform('spirent.core.ArchiveDiagnosticLogsCommand')
 
-    # Get a list of available files
-    files_list = stc.files()
+# Get a list of available files
+files_list = stc.files()
 
-    # Download and save the diagnostic.tgz file
-    file_name = 'diagnostic.tgz'
-    file_data = stc.download(file_name)
-    with open(file_name, 'w') as save_file:
-        save_file.write(file_data)
+# Download and save the diagnostic.tgz file
+file_name = 'diagnostic.tgz'
+file_data = stc.download(file_name)
+with open(file_name, 'w') as save_file:
+    save_file.write(file_data)
 
-    # Detach from and delete the session
-    stc.end_session(end_tcsession=True)
+# Detach from and delete the session
+stc.end_session(end_tcsession=True)
+```
 
-For example usage, look in the [examples directory](https://github.com/ajgillis/py-stcrestclient/examples) in the source repository.
+For example usage, look in the [examples] directory(https://github.com/ajgillis/py-stcrestclient/examples) for Python code examples.  The examples, like the client lib, will run with either Python2.7 or Python3.x.
 
 ## Using the ReST API Command line Shell: tccsh
 
