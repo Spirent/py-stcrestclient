@@ -2,19 +2,21 @@
 
 The stcrestclient package provides the stchttp.py ReST API wrapper module.  This allows simple function calls, nearly identical to those provided by StcPython.py, to be used to access TestCenter server sessions via the STC ReST API.
 
-The stcrestclient package also includes the commandline shell `tccsh` that lets you work interactively with remote STC sessions via the ReST API.
+The stcrestclient package also includes the command-line shell `tccsh` that lets you work interactively with remote STC sessions via the ReST API.
 
 All code works with Python2.7 and Python3.x.
 
 ## Project Links
 
-- Downloads: <https://github.com/ajgillis/py-stcrestclient>
+- Project page: <https://github.com/ajgillis/py-stcrestclient>
+- Package download: <http://pypi.python.org/pypi/stcrestclient>
 - Documentation: See *Spirent TestCenter Automation Programmer's Reference*
+- License: <http://www.opensource.org/licenses/mit-license.php>
 
 ## Quick Start
 - Install stcrestclient:
 
-   `sudo pip install https://github.com/ajgillis/py-stcrestclient/archive/master.zip`
+   `sudo pip install stcrestclient`
 
 - Write Python code to talk with TestCenter server
 
@@ -34,16 +36,19 @@ All code works with Python2.7 and Python3.x.
 
 ### Install Using pip
 
-Make sure python-pip is installed on you system.  If you are using virtualenv, then pip is alredy installed into environments created by vertualenv, and using sudo is not needed.  To install the latest, use pip with the repository archive URL:
+Make sure python-pip is installed on you system.  If you are using virtualenv, then pip is already installed into environments created by virtualenv, and using sudo is not needed.  To install the latest, use pip to install from pypi:
+
+    sudo pip install stcrestclient
+
+Or, install from the repository archive URL:
 
     sudo pip install https://github.com/ajgillis/py-stcrestclient/archive/master.zip
 
-
 ### Upgrade with pip
 
-If a newer version of the stcrestclient package is available, you can upgrade your existing version like this:
+If a newer version of the stcrestclient package is available, you can upgrade your existing version using the same command as you used to install, and adding the --upgrade flag:
 
-    sudo pip install --upgrade https://github.com/ajgillis/py-stcrestclient/archive/master.zip
+    sudo pip install --upgrade stcrestclient
 
 ### From Source
 
