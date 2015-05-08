@@ -13,7 +13,7 @@ def main():
         author_email='andrew.gillis@spirent.com',
         url='https://github.com/ajgillis/py-stcrestclient',
         description='stcrestclient: Client modules for STC ReST API',
-        long_description = open('README.md').read(),
+        long_description = 'See https://github.com/ajgillis/py-stcrestclient#python-stc-rest-api-client-stcrestclient',
         license='http://www.opensource.org/licenses/mit-license.php',
         platforms=['unix', 'linux', 'osx', 'cygwin', 'win32'],
         keywords='Spirent TestCenter API',
