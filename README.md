@@ -52,7 +52,7 @@ If a newer version of the stcrestclient package is available, you can upgrade yo
 
 ### From Source
 
-The stcrestclient package is installed from source using distutils in the usual way.  Download the source distribution (https://github.com/ajgillis/py-stcrestclient/archive/master.zip) first.  Unzip the zip archive and run the setup.py script to install the package site-wide.  Here are to commands to do that:
+The stcrestclient package is installed from source using distutils in the usual way.  Download the [source distribution](https://github.com/Spirent/py-stcrestclient/archive/master.zip) first.  Unzip the zip archive and run the setup.py script to install the package site-wide.  Here are to commands to do that:
 
     wget https://github.com/Spirent/py-stcrestclient/archive/master.zip py-stcrestclient.zip
     unzip py-stcrestclient.zip
