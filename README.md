@@ -8,7 +8,7 @@ All code works with Python2.7 and Python3.x.
 
 ## Project Links
 
-- Project page: <https://github.com/ajgillis/py-stcrestclient>
+- Project page: <https://github.com/Spirent/py-stcrestclient>
 - Package download: <http://pypi.python.org/pypi/stcrestclient>
 - Documentation: See *Spirent TestCenter Automation Programmer's Reference*
 - License: <http://www.opensource.org/licenses/mit-license.php>
@@ -42,7 +42,7 @@ Make sure python-pip is installed on you system.  If you are using virtualenv, t
 
 Or, install from the repository archive URL:
 
-    sudo pip install https://github.com/ajgillis/py-stcrestclient/archive/master.zip
+    sudo pip install https://github.com/Spirent/py-stcrestclient/archive/master.zip
 
 ### Upgrade with pip
 
@@ -54,7 +54,7 @@ If a newer version of the stcrestclient package is available, you can upgrade yo
 
 The stcrestclient package is installed from source using distutils in the usual way.  Download the source distribution (https://github.com/ajgillis/py-stcrestclient/archive/master.zip) first.  Unzip the zip archive and run the setup.py script to install the package site-wide.  Here are to commands to do that:
 
-    wget https://github.com/ajgillis/py-stcrestclient/archive/master.zip py-stcrestclient.zip
+    wget https://github.com/Spirent/py-stcrestclient/archive/master.zip py-stcrestclient.zip
     unzip py-stcrestclient.zip
     cd py-stcrestclient-*
     sudo python setup.py install
