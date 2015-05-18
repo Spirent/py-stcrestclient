@@ -136,7 +136,7 @@ Type help to see help info on the available commands.  This displays the help me
 
 To see help for a command, type "help" followed by the command name.  For example, type `help ls` to see help on the `ls` command.
 
-Use <TAB> for command auto-completion. Command auto-completion may not work on Windows.
+Use `Tab` for command auto-completion. Command auto-completion may not work on Windows.
 
 ## Requirements
 
