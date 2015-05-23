@@ -1,28 +1,31 @@
 """
-Client class and exception for performing basic REST API interactions.
+Client class and exception for performing basic ReST API interactions.
+
+RestHttp and RestHttps are provded to handle HTTP and HTTPS respectively.
 
 """
 from __future__ import print_function
-
-__author__ = 'Andrew Gillis'
 
 import json
 import base64
 import os
 import sys
+import ssl
+
+__author__ = 'Andrew Gillis'
 
 try:
     from urllib.parse import quote, unquote, urlencode
-    from http.client import HTTPConnection
+    from http.client import HTTPConnection, HTTPSConnection
 except ImportError:
     from urllib import quote, unquote, urlencode
-    from httplib import HTTPConnection
+    from httplib import HTTPConnection, HTTPSConnection
 
 
 class RestHttpError(Exception):
 
     """
-    Exception object returned when REST API error occurs.
+    Exception object returned when ReST API error occurs.
 
     """
 
@@ -47,29 +50,33 @@ class RestHttpError(Exception):
 class RestHttp(object):
 
     """
-    REST API client wrapper object base class.
+    ReST API HTTP client wrapper object base class.
 
-    Derive application-specific REST API class from this base class.
+    Derive application-specific ReST API class from this base class.
 
     """
 
-    def __init__(self, server, port=80, uri_base=None, user=None,
+    def __init__(self, server, port=None, uri_base=None, user=None,
                  password=None, debug_print=False):
-        """Initialize the REST API wrapper object.
+        """Initialize the ReST API HTTP wrapper object.
 
         Arguments:
-        server      -- STC REST API server to connect to. None to use environ.
+        server      -- HTTP server to connect to.
         port        -- HTTP port to connect to server on.  Default is 80.
         uri_base    -- Part of URI that always follows http://server/
-        user        --
-        password    --
+        user        -- Optional user name for basic auth.
+        password    -- Optional password for basic auth.
         debug_print -- Enable debug print statements.
 
         """
         self._server = server
-        port = int(port)
-        if port < 1 or port > 65535:
-            raise ValueError('invalid port value')
+        if port:
+            port = int(port)
+            if port < 1 or port > 65535:
+                raise ValueError('invalid port value')
+        else:
+            port = 80
+
         self._port = port
         self._base_headers = {'Accept': 'application/json'}
         self._uri_base = uri_base if uri_base else ''
@@ -131,8 +138,7 @@ class RestHttp(object):
         if self._dbg_print:
             print('===> GET %s' % (uri,))
 
-        conn = HTTPConnection(self._server, self._port)
-        conn.connect()
+        conn = self._connection()
         conn.request('GET', uri, None, headers)
         rsp = conn.getresponse()
 
@@ -148,6 +154,11 @@ class RestHttp(object):
             raise RestHttpError(status, -1, str(data))
 
         return status, data
+
+    def _connection(self):
+        conn = HTTPConnection(self._server, self._port)
+        conn.connect()
+        return conn
 
     @staticmethod
     def _get_query_str(items):
@@ -171,7 +182,6 @@ class RestHttp(object):
             print('===> %s %s' % (method, uri))
 
         return self.__upload_http(method, headers, uri, body)
-
 
     def _upload(self, container, src_file_path, dst_name=None, put=True):
         if not os.path.exists(src_file_path):
@@ -212,8 +222,7 @@ class RestHttp(object):
                 print('  --- Params ---')
                 print('   ', params)
 
-        conn = HTTPConnection(self._server, self._port)
-        conn.connect()
+        conn = self._connection()
         conn.request(method, uri, params, headers)
         rsp = conn.getresponse()
         status = rsp.status
@@ -290,7 +299,6 @@ class RestHttp(object):
         content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
         return content_type, '\r\n'.join(body)
 
-
     def __upload_http(self, method, headers, uri, body):
         if self._dbg_print:
             print('===> %s %s' % (method, uri))
@@ -298,8 +306,7 @@ class RestHttp(object):
             for k, v in headers.items():
                 print('===>    %s: %s' % (k, v))
 
-        conn = HTTPConnection(self._server, self._port)
-        conn.connect()
+        conn = self._connection()
         conn.request(method, uri, body, headers)
 
         rsp = conn.getresponse()
@@ -356,3 +363,49 @@ class RestHttp(object):
         elif isinstance(data, unicode):
             return str(data)
         return data
+
+
+class RestHttps(RestHttp):
+
+    """
+    ReST API HTTP client wrapper object base class.
+
+    Derive application-specific ReST API class from this base class.
+
+    """
+
+    def __init__(self, server, port=None, uri_base=None, user=None,
+                 password=None, debug_print=False, context=None,
+                 no_verify=False):
+        """Initialize the ReST API HTTPS wrapper object.
+
+        Arguments:
+        server      -- HTTPS server to connect to.
+        port        -- HTTPS port to connect to server on.  Default is 443.
+        uri_base    -- Part of URI that always follows http://server/
+        user        -- Optional user name for basic auth.
+        password    -- Optional password for basic auth.
+        debug_print -- Enable debug print statements.
+        context     -- Optional ssl.SSLContext instance describing the various
+                       SSL options.
+        no_verify   -- Do not verify certificates.  This is a shortcut for
+                       specifying context=ssl._create_unverified_context()
+                       ***
+                       FIX CERTIFICATION VERIFICATION INSTEAD OF USING THIS
+                       ***
+        """
+        if not port:
+            port = 443
+
+        if no_verify:
+            self._context = ssl._create_unverified_context()
+        else:
+            self._context = context
+
+        RestHttp.__init__(self,  server, port, uri_base, user, password,
+                          debug_print)
+
+    def _connection(self):
+        conn = HTTPSConnection(self._server, self._port, context=self._context)
+        conn.connect()
+        return conn
