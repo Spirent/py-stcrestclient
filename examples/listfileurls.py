@@ -15,7 +15,7 @@ try:
     stc.join_session(session_id)
 
     # List files available for download.
-    for file_url in stc.files():
+    for file_url in stc.file_urls():
         print(file_url)
 
 except Exception as e:

@@ -6,8 +6,8 @@ session_name = 'extest'
 user_name = 'someuser'
 session_id = ' - '.join((session_name, user_name))
 
-if len(sys.argv) < 2:
-    print('usage: python', sys.argv[0], 'server_addr', file=sys.stderr)
+if len(sys.argv) < 3:
+    print('usage: python', sys.argv[0], 'server_addr file', file=sys.stderr)
     sys.exit(1)
 
 try:
@@ -15,13 +15,12 @@ try:
     stc.join_session(session_id)
 
     # Download file.
-    download_name = 'bll.log'
-    file_data = stc.download(download_name)
-    with open(download_name, 'w') as save_file:
-        save_file.write(file_data)
-    print('wrote %s bytes to %s' % (len(file_data), download_name))
+    download_name = sys.argv[2]
+    save_name, bytes = stc.download(download_name)
+    print('wrote %s bytes to %s' % (bytes, save_name))
 
 except Exception as e:
     print(e, file=sys.stderr)
-    sys.exit(1)
+    raise
+    #sys.exit(1)
 

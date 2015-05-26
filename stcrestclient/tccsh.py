@@ -140,16 +140,25 @@ class TestCenterCommandShell(cmd.Cmd):
         """Join the specified session: join testA - jdoe"""
         if self._not_session(session):
             return
-        try:
-            bll_ver = self._stc.join_session(session)
-        except Exception as e:
-            print(e)
-            return
+        #try:
+        #    bll_ver = self._stc.join_session(session)
+        #except Exception as e:
+        #    print(e)
+        #    return
+        bll_ver = self._stc.join_session(session)
         self._joined = session
         print('Joined session "%s" (BLL ver: %s)' % (session, bll_ver))
 
     def complete_join(self, text, line, begidx, endidx):
         return self._complete_session(text)
+
+    def do_debug_on(self, s):
+        """Enable debug printing."""
+        self._stc.enable_debug_print()
+
+    def do_debug_off(self, s):
+        """Disable debug printing."""
+        self._stc.disable_debug_print()
 
     def do_exit(self, s):
         """Exit the SessionManager shell."""
@@ -193,7 +202,8 @@ class TestCenterCommandShell(cmd.Cmd):
                 server = None
 
         try:
-            self._stc = stchttp.StcHttp(server, debug_print=debug)
+            self._stc = stchttp.StcHttp(
+                server, debug_print=self._stc.debug_print())
         except RuntimeError as e:
             print(e)
             return
@@ -261,17 +271,11 @@ class TestCenterCommandShell(cmd.Cmd):
                 save_name = check_path(save_name)
 
         try:
-            file_data = self._stc.download(file_name)
+            save_name, bytes = self._stc.download(file_name)
         except RuntimeError as e:
             print(e)
             return
 
-        bytes = 0
-        with open(save_name, 'w') as save_file:
-            for data in file_data:
-                s = str(data)
-                bytes += len(s)
-                save_file.write(s)
         print('wrote %s bytes to %s' % (bytes, save_name))
 
     def complete_download(self, text, line, begidx, endidx):

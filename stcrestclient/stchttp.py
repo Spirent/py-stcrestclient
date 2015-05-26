@@ -29,10 +29,10 @@ DEFAULT_PORT = 8888
 ALT_PORT = 80
 
 
-class StcHttp(resthttp.RestHttp):
+class StcHttp(object):
 
     """
-    Spirent TestCenter REST API wrapper object.
+    Spirent TestCenter ReST API wrapper object.
 
     """
 
@@ -62,22 +62,23 @@ class StcHttp(resthttp.RestHttp):
             port = os.environ.get('STC_SERVER_PORT')
             try_ports = [port] if port else [DEFAULT_PORT, ALT_PORT]
 
+        self._dbg_print = bool(debug_print)
+        rest = None
         while try_ports:
             port = try_ports.pop(0)
-            resthttp.RestHttp.__init__(self, server, port, '/stcapi', None,
-                                       None, False)
+            url = resthttp.RestHttp.url('http', server, port, 'stcapi')
+            rest = resthttp.RestHttp(url, debug_print=debug_print)
             try:
-                self._get_request('sessions')
+                rest.get_request('sessions')
                 break
             except (socket.error, resthttp.RestHttpError):
                 if not try_ports:
                     raise RuntimeError('Cannot connect to server: %s:%s' %
                                        (server, port))
 
-        self._dbg_print = debug_print
-        self._base_headers['X-Spirent-API-Version'] = str(api_version)
+        rest.add_header('X-Spirent-API-Version', str(api_version))
+        self._rest = rest
         self._sid = None
-        self._session_url = None
 
     def session_id(self):
         return self._sid
@@ -99,9 +100,9 @@ class StcHttp(resthttp.RestHttp):
             session_name = ''
         params = {'userid': user_name, 'sessionname': session_name}
         try:
-            status, data = self._post_request('sessions', None, params)
+            status, data = self._rest.post_request('sessions', None, params)
         except resthttp.RestHttpError as e:
-            if kill_existing and str(e).find('session already exists') >= 0:
+            if kill_existing and str(e).find('already exists') >= 0:
                 self._sid = ' - '.join((session_name, user_name))
                 self.end_session()
             else:
@@ -110,32 +111,28 @@ class StcHttp(resthttp.RestHttp):
             # Starting session
             if self._dbg_print:
                 print('===> starting session')
-            status, data = self._post_request('sessions', None, params)
+            status, data = self._rest.post_request('sessions', None, params)
             if self._dbg_print:
                 print('===> OK, started')
 
         sid = data['session_id']
-        session_url = self.resource_to_url(sid)
         if self._dbg_print:
             print('===> session ID:', sid)
-            print('===> URL:', session_url)
+            print('===> URL:', self._rest.make_url('sessions', sid))
 
-        self._base_headers['X-STC-API-Session'] = sid
+        self._rest.add_header('X-STC-API-Session', sid)
         self._sid = sid
-        self._session_url = session_url
         return sid
 
     def join_session(self, sid):
-        self._base_headers['X-STC-API-Session'] = sid
+        self._rest.add_header('X-STC-API-Session', sid)
         self._sid = sid
-        self._session_url = self.resource_to_url(sid)
         try:
-            status, data = self._get_request('objects', 'system1',
-                                             ['version', 'name'])
+            status, data = self._rest.get_request('objects', 'system1',
+                                                  ['version', 'name'])
         except resthttp.RestHttpError as e:
-            del self._base_headers['X-STC-API-Session']
+            self._rest.del_header('X-STC-API-Session')
             self._sid = None
-            self._session_url = None
             raise RuntimeError('failed to join session: ' + str(e))
 
         return data['version']
@@ -158,16 +155,29 @@ class StcHttp(resthttp.RestHttp):
             print('===> deleting session:', self._sid)
 
         sid = self._sid
-        self._sid = self._session_url = None
+        self._sid = None
         if end_tcsession:
             try:
-                status, data = self._delete_request('sessions', sid)
+                status, data = self._rest.delete_request('sessions', sid)
             except resthttp.RestHttpError as e:
                 raise RuntimeError('failed to end session: ' + str(e))
             time.sleep(7)
+
+        self._rest.del_header('X-STC-API-Session')
         if self._dbg_print:
             print('===> OK - deleted')
         return True
+
+    def debug_print(self):
+        return self._dbg_print
+
+    def enable_debug_print(self):
+        self._dbg_print = True
+        self._rest.enable_debug_print()
+
+    def disable_debug_print(self):
+        self._dbg_print = False
+        self._rest.disable_debug_print()
 
     def started(self):
         """Return True is session is started.  Otherwise, return False."""
@@ -180,7 +190,7 @@ class StcHttp(resthttp.RestHttp):
         List of session ID values, one for each active session on server.
 
         """
-        status, data = self._get_request('sessions')
+        status, data = self._rest.get_request('sessions')
         return data
 
     def session_urls(self):
@@ -190,7 +200,8 @@ class StcHttp(resthttp.RestHttp):
         List of session URLs, one for each active session on server.
 
         """
-        return [self.resource_to_url(sid) for sid in self.sessions()]
+        return [self._rest.make_url('sessions', sid)
+                for sid in self.sessions()]
 
     def session_info(self, session_id=None):
         """Get information on session.
@@ -210,13 +221,13 @@ class StcHttp(resthttp.RestHttp):
             if not self.started():
                 return []
             session_id = self._sid
-        status, data = self._get_request('sessions', session_id)
+        status, data = self._rest.get_request('sessions', session_id)
         return data
 
     def files(self):
         """Get list of files, for this session, on server."""
         self._check_session()
-        status, data = self._get_request('files')
+        status, data = self._rest.get_request('files')
         return data
 
     def file_urls(self):
@@ -226,7 +237,7 @@ class StcHttp(resthttp.RestHttp):
         List of session URLs, one for each file on server.
 
         """
-        return [self.resource_to_url(f) for f in self.files()]
+        return [self._rest.make_url('files', f) for f in self.files()]
 
     def bll_version(self):
         """Get the BLL version this session is connected to.
@@ -237,22 +248,22 @@ class StcHttp(resthttp.RestHttp):
         """
         if not self.started():
             return None
-        status, data = self._get_request('objects', 'system1',
-                                         ['version', 'name'])
+        status, data = self._rest.get_request('objects', 'system1',
+                                              ['version', 'name'])
         return data['version']
 
     def system_info(self):
-        status, data = self._get_request('system')
+        status, data = self._rest.get_request('system')
         return data
 
     def server_info(self):
-        status, data = self._get_request('objects', 'system1')
+        status, data = self._rest.get_request('objects', 'system1')
         return data
 
     def apply(self):
         """Send test configuration to chassis."""
         self._check_session()
-        self._put_request(None, 'apply')
+        self._rest.put_request(None, 'apply')
 
     def get(self, handle, *args):
         """Returns the value(s) of one or more object attributes.
@@ -276,7 +287,7 @@ class StcHttp(resthttp.RestHttp):
 
         """
         self._check_session()
-        status, data = self._get_request('objects', str(handle), args)
+        status, data = self._rest.get_request('objects', str(handle), args)
         if len(args) == 1 and not isinstance(data, (list, tuple)):
             data = data.split()
 
@@ -316,7 +327,7 @@ class StcHttp(resthttp.RestHttp):
         if attributes:
             params.update(attributes)
 
-        status, data = self._post_request('objects', None, params)
+        status, data = self._rest.post_request('objects', None, params)
         return data
 
     def delete(self, handle):
@@ -327,7 +338,7 @@ class StcHttp(resthttp.RestHttp):
 
         """
         self._check_session()
-        self._delete_request('objects', str(handle))
+        self._rest.delete_request('objects', str(handle))
 
     def perform(self, command, params=None):
         """Execute a command.
@@ -344,7 +355,7 @@ class StcHttp(resthttp.RestHttp):
         if not params:
             params = {}
         params['command'] = command
-        status, data = self._post_request('perform', None, params)
+        status, data = self._rest.post_request('perform', None, params)
         return data
 
     def config(self, handle, attributes=None):
@@ -356,30 +367,30 @@ class StcHttp(resthttp.RestHttp):
 
         """
         self._check_session()
-        self._put_request('objects', str(handle), attributes)
+        self._rest.put_request('objects', str(handle), attributes)
 
     def chassis(self):
         """Get list of chassis known to test session."""
         self._check_session()
-        status, data = self._get_request('chassis')
+        status, data = self._rest.get_request('chassis')
         return data
 
     def chassis_info(self, chassis):
         """Get information about the specified chassis."""
         self._check_session()
-        status, data = self._get_request('chassis', chassis)
+        status, data = self._rest.get_request('chassis', chassis)
         return data
 
     def connections(self):
         """Get list of connections."""
         self._check_session()
-        status, data = self._get_request('connections')
+        status, data = self._rest.get_request('connections')
         return data
 
     def is_connected(self, chassis):
         """Get Boolean connected status of the specified chassis."""
         self._check_session()
-        status, data = self._get_request('connections', chassis)
+        status, data = self._rest.get_request('connections', chassis)
         return bool(data and data.get('IsConnected'))
 
     def connect(self, chassis_list):
@@ -394,12 +405,13 @@ class StcHttp(resthttp.RestHttp):
         """
         self._check_session()
         if len(chassis_list) == 1:
-            status, data = self._put_request('connections', chassis_list[0])
+            status, data = self._rest.put_request(
+                'connections', chassis_list[0])
             data = [data]
         else:
             params = {chassis: None for chassis in chassis_list}
             params['action'] = 'connect'
-            status, data = self._post_request('connections', None, params)
+            status, data = self._rest.post_request('connections', None, params)
         return data
 
     def disconnect(self, chassis_list):
@@ -414,25 +426,26 @@ class StcHttp(resthttp.RestHttp):
 
         self._check_session()
         if len(chassis_list) == 1:
-            self._delete_request('connections', chassis_list[0])
+            self._rest.delete_request('connections', chassis_list[0])
         else:
             params = {chassis: None for chassis in chassis_list}
             params['action'] = 'disconnect'
-            self._post_request('connections', None, params)
+            self._rest.post_request('connections', None, params)
 
     def connectall(self):
         """Establish connections to all chassis (test ports) in this session.
 
         """
         self._check_session()
-        self._post_request('connections', None, {'action': 'connectall'})
+        self._rest.post_request('connections', None, {'action': 'connectall'})
 
     def disconnectall(self):
         """Remove connections to all chassis (test ports) in this session.
 
         """
         self._check_session()
-        self._post_request('connections', None, {'action': 'disconnectall'})
+        self._rest.post_request('connections', None,
+                                {'action': 'disconnectall'})
 
     def help(self, subject=None):
         """Get help information about Automation API.
@@ -452,26 +465,25 @@ class StcHttp(resthttp.RestHttp):
 
         """
         if not subject:
-            status, data = self._get_request('help')
+            status, data = self._rest.get_request('help')
         else:
-            status, data = self._get_request('help', subject)
+            status, data = self._rest.get_request('help', subject)
         return data['message']
 
     def download(self, file_name):
         """Download the specified file from the server."""
         self._check_session()
         try:
-            #status, data = self._get_request('files', None, [file_name])
-            status, data = self._download('files', file_name, None,
-                                          'application/octet-stream')
+            status, save_name, bytes = self._rest.download_file(
+                'files', file_name, None, 'application/octet-stream')
         except resthttp.RestHttpError as e:
             raise RuntimeError('failed to download "%s": %s' % (file_name, e))
-        return data
+        return save_name, bytes
 
     def upload(self, src_file_path, dst_file_name=None):
         """Upload the specified file to the server."""
         self._check_session()
-        status, data = self._upload('files', src_file_path, dst_file_name)
+        status, data = self._rest.upload('files', src_file_path, dst_file_name)
         return data
 
     def _check_session(self):

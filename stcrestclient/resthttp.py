@@ -1,38 +1,30 @@
 """
 Client class and exception for performing basic ReST API interactions.
 
-RestHttp and RestHttps are provded to handle HTTP and HTTPS respectively.
-
 """
 from __future__ import print_function
 
-import json
 import base64
 import os
 import sys
-import ssl
+
+import requests
 
 __author__ = 'Andrew Gillis'
-
-try:
-    from urllib.parse import quote, unquote, urlencode
-    from http.client import HTTPConnection, HTTPSConnection
-except ImportError:
-    from urllib import quote, unquote, urlencode
-    from httplib import HTTPConnection, HTTPSConnection
 
 
 class RestHttpError(Exception):
 
     """
-    Exception object returned when ReST API error occurs.
+    Exception object that returns error from remote call.
 
     """
 
-    def __init__(self, http_status, code, msg):
-        self.code = int(code)
+    def __init__(self, http_status, http_reason, msg, code=None):
         self.http_status = int(http_status)
+        self.http_error = '%s %s' % (http_status, http_reason)
         self.msg = msg
+        self.code = code
 
     def __int__(self):
         """Get HTTP status code."""
@@ -43,7 +35,7 @@ class RestHttpError(Exception):
         return self.msg
 
     def code(self):
-        """Get REST API error code."""
+        """Get API error code."""
         return self.code
 
 
@@ -56,32 +48,24 @@ class RestHttp(object):
 
     """
 
-    def __init__(self, server, port=None, uri_base=None, user=None,
-                 password=None, debug_print=False):
+    def __init__(self, base_url, user=None, password=None, ssl_verify=True,
+                 debug_print=False):
         """Initialize the ReST API HTTP wrapper object.
 
         Arguments:
-        server      -- HTTP server to connect to.
-        port        -- HTTP port to connect to server on.  Default is 80.
-        uri_base    -- Part of URI that always follows http://server/
+        base_url    -- Base URL for requests.  Ex: http://example.com/stuff/
         user        -- Optional user name for basic auth.
         password    -- Optional password for basic auth.
+        ssl_verify  -- Set to False to disable SSL verification (not secure).
         debug_print -- Enable debug print statements.
 
         """
-        self._server = server
-        if port:
-            port = int(port)
-            if port < 1 or port > 65535:
-                raise ValueError('invalid port value')
-        else:
-            port = 80
+        self._base_url = base_url.strip('/')
 
-        self._port = port
         self._base_headers = {'Accept': 'application/json'}
-        self._uri_base = uri_base if uri_base else ''
         self._user = user
         self._password = password
+        self._verify = ssl_verify
         self._dbg_print = debug_print
 
         # autheticated API
@@ -89,323 +73,323 @@ class RestHttp(object):
             b64string = base64.encodestring('%s:%s' % (user, password))[:-1]
             self._base_headers["Authorization"] = "Basic %s" % b64string
 
-    def base_url(self):
-        return self._uri_base
-
-    def resource_to_url(self, resource):
-        return '%s/%s' % (self._uri_base, quote(resource))
-
-    def url_to_resource(self, uri):
-        resource = uri.split(self._uri_base, 1)[-1].strip('/')
-        return unquote(resource.split('/', 1)[-1])
-
-    def make_uri(self, container, resource=None, query_items=None):
-        pth = [self._uri_base]
-        if container:
-            pth.append(container)
-        resource = '' if resource is None else quote(resource)
-        if query_items:
-            resource += RestHttp._get_query_str(query_items)
-        pth.append(resource)
-        return '/'.join(pth)
-
-    ###########################################################################
-    # protected methods
-    #
-    def _get_request(self, container, resource=None, query_items=None,
-                     accept=None):
-        uri = self.make_uri(container, resource, query_items)
-        return self.__transact_http('GET', uri, None, accept)
-
-    def _post_request(self, container, resource=None, params=None,
-                      accept=None):
-        uri = self.make_uri(container, resource, None)
-        return self.__transact_http('POST', uri, params, accept)
-
-    def _put_request(self, container, resource=None, params=None, accept=None):
-        uri = self.make_uri(container, resource, None)
-        return self.__transact_http('PUT', uri, params, accept)
-
-    def _delete_request(self, container, resource, accept=None):
-        uri = self.make_uri(container, resource, None)
-        return self.__transact_http('DELETE', uri, None, accept)
-
-    def _download(self, container, resource, query_items=None, accept=None):
-        uri = self.make_uri(container, resource, None)
-        headers = dict(self._base_headers)
-        if accept:
-            headers['Accept'] = accept
-        if self._dbg_print:
-            print('===> GET %s' % (uri,))
-
-        conn = self._connection()
-        conn.request('GET', uri, None, headers)
-        rsp = conn.getresponse()
-
-        status = rsp.status
-        data = None
-        if status != 204:
-            if self._dbg_print:
-                print('===> response content-type:',
-                      rsp.getheader('content-type'))
-            data = rsp.read()
-        conn.close()
-        if status >= 300:
-            raise RestHttpError(status, -1, str(data))
-
-        return status, data
-
-    def _connection(self):
-        conn = HTTPConnection(self._server, self._port)
-        conn.connect()
-        return conn
-
     @staticmethod
-    def _get_query_str(items):
-        return '?' + '&'.join((quote(i) for i in items))
+    def url(proto, server, port=None, uri=None):
+        """Construct a URL from the given components."""
+        url_parts = [proto, '://', server]
+        if port:
+            port = int(port)
+            if port < 1 or port > 65535:
+                raise ValueError('invalid port value')
+            if not ((proto == 'http' and port == 80) or
+                    (proto == 'https' and port == 443)):
+                url_parts.append(':')
+                url_parts.append(str(port))
 
-    def _upload_multipart(self, resource, file_path, dst_name=None,
-                          fields=None):
-        if not os.path.exists(file_path):
-            raise RuntimeError('file not found: ' + file_path)
-        if not dst_name:
-            dst_name = os.path.basename(file_path)
-        headers = dict(self._base_headers)
-        method = 'POST'
-        content_type, body = self.__encode_multipart(file_path, dst_name,
-                                                     fields)
+        if uri:
+            url_parts.append('/')
+            url_parts.append(requests.utils.quote(uri.strip('/')))
 
-        headers["content-type"] = content_type
-        headers["content-length"] = str(len(body))
-        uri = '%s/%s' % (self._uri_base, resource)
+        url_parts.append('/')
+        return ''.join(url_parts)
+
+    def debug_print(self):
+        """Return True if debug printing enabled."""
+        return self._dbg_print
+
+    def enable_debug_print(self):
+        """Turn debug printing on."""
+        self._dbg_print = True
+
+    def disable_debug_print(self):
+        """Turn debug printing off."""
+        self._dbg_print = False
+
+    def add_header(self, header, value):
+        """Include additional header with each request."""
+        self._base_headers[header] = value
+
+    def del_header(self, header):
+        """Removed a header from those included with each request."""
+        self._base_headers.pop(header, None)
+
+    def base_url(self):
+        """Return the base URL used for each request."""
+        return self._base_url
+
+    def make_url(self, container=None, resource=None, query_items=None):
+        """Create a URL from the specified parts."""
+        pth = [self._base_url]
+        if container:
+            pth.append(container.strip('/'))
+        if resource:
+            pth.append(resource)
+        else:
+            pth.append('')
+        url = '/'.join(pth)
+        if isinstance(query_items, (list, tuple, set)):
+            url += RestHttp._list_query_str(query_items)
+            query_items = None
+        p = requests.PreparedRequest()
+        p.prepare_url(url, query_items)
+        return p.url
+
+    def head_request(self, container, resource=None):
+        """Send a HEAD request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(None)
+
+        rsp = requests.head(url, headers=self._base_headers,
+                            verify=self._verify)
         if self._dbg_print:
-            print('===> %s %s' % (method, uri))
+            self.__print_req('HEAD', rsp.url, headers, None)
 
-        return self.__upload_http(method, headers, uri, body)
+        return rsp.status_code
 
-    def _upload(self, container, src_file_path, dst_name=None, put=True):
+    def get_request(self, container, resource=None, query_items=None,
+                    accept=None, to_lower=False):
+        """Send a GET request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+
+        if query_items and isinstance(query_items, (list, tuple, set)):
+            url += RestHttp._list_query_str(query_items)
+            query_items = None
+
+        rsp = requests.get(url, query_items, headers=headers,
+                           verify=self._verify)
+        if self._dbg_print:
+            self.__print_req('GET', rsp.url, headers, None)
+
+        return self._handle_response(rsp, to_lower)
+
+    def post_request(self, container, resource=None, params=None,
+                     accept=None):
+        """Send a POST request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+
+        rsp = requests.post(url, params, headers=headers,
+                            verify=self._verify)
+        if self._dbg_print:
+            self.__print_req('POST', rsp.url, headers, params)
+
+        return self._handle_response(rsp)
+
+    def put_request(self, container, resource=None, params=None,
+                    accept=None):
+        """Send a PUT request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+
+        rsp = requests.put(url, params, headers=headers,
+                           verify=self._verify)
+        if self._dbg_print:
+            self.__print_req('PUT', rsp.url, headers, params)
+
+        return self._handle_response(rsp)
+
+    def delete_request(self, container, resource=None, accept=None):
+        """Send a DELETE request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+
+        rsp = requests.delete(url, headers=headers, verify=self._verify)
+        if self._dbg_print:
+            self.__print_req('DELETE', rsp.url, headers, None)
+
+        return self._handle_response(rsp)
+
+    def download_file(self, container, resource, save_path=None,
+                      accept=None, query_items=None):
+        """Download a file."""
+        url = self.make_url(container, resource)
+        if not save_path:
+            save_path = resource.split('/')[-1]
+
+        headers = self._make_headers(accept)
+
+        if query_items and isinstance(query_items, (list, tuple, set)):
+            url += RestHttp._list_query_str(query_items)
+            query_items = None
+
+        rsp = requests.get(url, query_items, headers=headers, stream=True,
+                           verify=self._verify)
+        if self._dbg_print:
+            self.__print_req('GET', rsp.url, headers, None)
+
+        if rsp.status_code >= 300:
+            raise RestHttpError(rsp.status_code, rsp.reason, rsp.text)
+
+        file_size_dl = 0
+        try:
+            with open(save_path, 'wb') as f:
+                for buff in rsp.iter_content(chunk_size=16384):
+                    f.write(buff)
+        except Exception as e:
+            raise RuntimeError('could not download file: ' + str(e))
+        finally:
+            rsp.close()
+
+        if self._dbg_print:
+            print('===> downloaded %d bytes to %s' % (file_size_dl, save_path))
+
+        return rsp.status_code, save_path, os.path.getsize(save_path)
+
+    def upload_file(self, container, src_file_path, dst_name=None, put=True,
+                    content_type=None):
+        """Upload a single file."""
         if not os.path.exists(src_file_path):
             raise RuntimeError('file not found: ' + src_file_path)
         if not dst_name:
             dst_name = os.path.basename(src_file_path)
+        if not content_type:
+            content_type = "application/octet.stream"
         headers = dict(self._base_headers)
-        headers["content-type"] = "application/octet.stream"
+        if content_type:
+            headers["content-length"] = content_type
+        else:
+            headers["content-length"] = "application/octet.stream"
         headers["content-length"] = str(os.path.getsize(src_file_path))
         headers['content-disposition'] = 'attachment; filename=' + dst_name
         if put:
             method = 'PUT'
-            uri = self.make_uri(container, dst_name, None)
+            url = self.make_url(container, dst_name, None)
         else:
             method = 'POST'
-            uri = self.make_uri(container, None, None)
+            url = self.make_url(container, None, None)
         with open(src_file_path, 'rb') as up_file:
-            return self.__upload_http(method, headers, uri, up_file)
+            rsp = requests.request(method, url, headers=headers, data=up_file)
+
+        return self._handle_response(rsp)
+
+    def upload_file_mp(self, container, src_file_path, dst_name=None,
+                       content_type=None):
+        """Upload a file using multi-part encoding."""
+        if not os.path.exists(src_file_path):
+            raise RuntimeError('file not found: ' + src_file_path)
+        if not dst_name:
+            dst_name = os.path.basename(src_file_path)
+        if not content_type:
+            content_type = "application/octet.stream"
+        url = self.make_url(container, None, None)
+        headers = self._base_headers
+        with open(src_file_path, 'rb') as up_file:
+            files = {'file': (dst_name, up_file, content_type)}
+            rsp = requests.post(url, headers=headers, files=files)
+
+        return self._handle_response(rsp)
+
+    def upload_files(self, container, src_dst_map, content_type=None):
+        """Upload multiple files."""
+        if not content_type:
+            content_type = "application/octet.stream"
+        url = self.make_url(container, None, None)
+        headers = self._base_headers
+        multi_files = []
+        try:
+            for src_path in src_dst_map:
+                dst_name = src_dst_map[src_path]
+                if not dst_name:
+                    dst_name = os.path.basename(src_path)
+                multi_files.append(
+                    ('files', (dst_name, open(src_path, 'rb'), content_type)))
+
+            rsp = requests.post(url, headers=headers, files=multi_files)
+        finally:
+            for n, info in multi_files:
+                dst, f, ctype = info
+                f.close()
+
+        return self._handle_response(rsp)
+
 
     ###########################################################################
     # private methods
     #
 
-    def __transact_http(self, method, uri, params, accept):
-        headers = dict(self._base_headers)
+    def _make_headers(self, accept):
         if accept:
+            headers = dict(self._base_headers)
             headers['Accept'] = accept
-        if params:
-            headers["Content-type"] = "application/x-www-form-urlencoded"
-            params = urlencode(params)
+            return headers
+        return self._base_headers
 
+    def _handle_response(self, rsp, to_lower=False):
         if self._dbg_print:
-            print('===> %s %s' % (method, uri))
-            print('  --- Headers ---')
-            for k, v in headers.items():
-                print('    %s: %s' % (k, v))
-            if params:
-                print('  --- Params ---')
-                print('   ', params)
+            print('===> response status:', rsp.status_code, rsp.reason)
 
-        conn = self._connection()
-        conn.request(method, uri, params, headers)
-        rsp = conn.getresponse()
-        status = rsp.status
         data = None
-        if self._dbg_print:
-            print('===> response status:', status)
+        if rsp.status_code != 204:
+            data = rsp.json()
+            if not data:
+                data = rsp.content
 
-        if status != 204:
+            if data and sys.version < '3':
+                # Py2.7
+                data = self._uc_to_str(data, to_lower)
+            elif to_lower:
+                data = self._rsp_to_lower(data)
+
             if self._dbg_print:
                 print('===> response content-type:',
-                      rsp.getheader('content-type'))
-            ctype = rsp.getheader('content-type')
-            if ctype and ctype.startswith('application/json'):
-                json_data = rsp.read()
-                if self._dbg_print:
-                    print('===> JSON DATA:', json_data)
-                if json_data:
-                    try:
-                        if sys.version < '3':
-                            # Py2.7
-                            data = RestHttp._uc_to_str(json.loads(json_data))
-                        else:
-                            data = json.loads(json_data.decode('utf-8'))
-                    except ValueError:
-                        data = {'code': -1, 'detail': json_data}
-            else:
-                data = rsp.read()
+                      rsp.headers.get('content-type'))
+                print('===> DATA:', data)
 
-        conn.close()
-
-        if status >= 300:
+        if rsp.status_code >= 300:
+            code = None
             if data:
                 if isinstance(data, dict):
-                    code = data.get('code', -1)
                     if 'detail' in data:
                         detail = data['detail']
                     elif 'message' in data:
                         detail = data['message']
                     else:
                         detail = 'unknown error: ' + str(data)
+                    code = data.get('code')
                 else:
-                    code = -1
                     detail = 'unknown error: ' + str(data)
             else:
-                code = -1
                 detail = ''
-            raise RestHttpError(status, code, detail)
 
-        return status, data
+            raise RestHttpError(rsp.status_code, rsp.reason, detail, code)
 
-    def __encode_multipart(self, file_path, file_name, fields=None):
-        BOUNDARY = '----------ThE_fIlE_bOuNdArY_$'
-        body = []
-        if fields:
-            for key, val in fields:
-                body.append('--' + BOUNDARY)
-                body.append('Content-Disposition: form-data; name="%s"' % key)
-                body.append('')
-                body.append(val)
-
-        with open(file_path, 'rb') as up_file:
-            file_content = up_file.read()
-
-        body.append('--' + BOUNDARY)
-        body.append(
-            'Content-Disposition: form-data; name="file"; filename="%s"'
-            % file_name)
-        body.append('Content-Type: application/octet-stream')
-        body.append('')
-        body.append(file_content)
-
-        body.append('--' + BOUNDARY + '--')
-        body.append('')
-        content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
-        return content_type, '\r\n'.join(body)
-
-    def __upload_http(self, method, headers, uri, body):
-        if self._dbg_print:
-            print('===> %s %s' % (method, uri))
-            print('===> HEADERS:')
-            for k, v in headers.items():
-                print('===>    %s: %s' % (k, v))
-
-        conn = self._connection()
-        conn.request(method, uri, body, headers)
-
-        rsp = conn.getresponse()
-        status = rsp.status
-        data = None
-        if status != 204:
-            if self._dbg_print:
-                print('===> response content-type:',
-                      rsp.getheader('content-type'))
-            if rsp.getheader('content-type').startswith('application/json'):
-                json_data = rsp.read()
-                if self._dbg_print:
-                    print('===> JSON DATA:', json_data)
-                if json_data:
-                    try:
-                        if sys.version < '3':
-                            # Py2.7
-                            data = RestHttp._uc_to_str(json.loads(json_data))
-                        else:
-                            data = json.loads(json_data.decode('utf-8'))
-                    except ValueError:
-                        data = {'code': -1, 'detail': json_data}
-            else:
-                data = rsp.read()
-
-        conn.close()
-        if status >= 300:
-            if data:
-                if isinstance(data, dict):
-                    code = data.get('code', -1)
-                    if 'detail' in data:
-                        detail = data['detail']
-                    elif 'message' in data:
-                        detail = data['message']
-                    else:
-                        detail = 'unknown error: ' + str(data)
-                else:
-                    code = -1
-                    detail = 'unknown error: ' + str(data)
-            else:
-                code = -1
-                detail = ''
-            raise RestHttpError(status, code, detail)
-
-        return status, data
+        return rsp.status_code, data
 
     @staticmethod
-    def _uc_to_str(data):
+    def _list_query_str(items):
+        return '?' + '&'.join(items)
+
+    def _uc_to_str(self, data, lc):
         if isinstance(data, dict):
-            return {RestHttp._uc_to_str(k): RestHttp._uc_to_str(v)
+            return {self._uc_to_str(k, lc): self._uc_to_str(v, lc)
                     for k, v in data.iteritems()}
         elif isinstance(data, list):
-            return [RestHttp._uc_to_str(i) for i in data]
+            return [self._uc_to_str(i, lc) for i in data]
         elif isinstance(data, unicode):
+            if lc:
+                return str(data).lower()
             return str(data)
+        elif isinstance(data, str) and lc:
+            return data.lower()
         return data
 
+    def _rsp_to_lower(self, data):
+        if isinstance(data, dict):
+            return {self._rsp_to_lower(k): self._rsp_to_lower(v)
+                    for k, v in data.iteritems()}
+        elif isinstance(data, list):
+            return [self._rsp_to_lower(i) for i in data]
+        elif isinstance(data, str):
+            return data.lower()
+        return data
 
-class RestHttps(RestHttp):
+    def __print_req(self, method, url, headers, params):
+        print('===> %s %s' % (method, url))
+        print('  --- Headers ---')
+        for k, v in headers.items():
+            print('    %s: %s' % (k, v))
+        if params:
+            print('  --- Params ---')
+            print('   ', params)
 
-    """
-    ReST API HTTP client wrapper object base class.
-
-    Derive application-specific ReST API class from this base class.
-
-    """
-
-    def __init__(self, server, port=None, uri_base=None, user=None,
-                 password=None, debug_print=False, context=None,
-                 no_verify=False):
-        """Initialize the ReST API HTTPS wrapper object.
-
-        Arguments:
-        server      -- HTTPS server to connect to.
-        port        -- HTTPS port to connect to server on.  Default is 443.
-        uri_base    -- Part of URI that always follows http://server/
-        user        -- Optional user name for basic auth.
-        password    -- Optional password for basic auth.
-        debug_print -- Enable debug print statements.
-        context     -- Optional ssl.SSLContext instance describing the various
-                       SSL options.
-        no_verify   -- Do not verify certificates.  This is a shortcut for
-                       specifying context=ssl._create_unverified_context()
-                       ***
-                       FIX CERTIFICATION VERIFICATION INSTEAD OF USING THIS
-                       ***
-        """
-        if not port:
-            port = 443
-
-        if no_verify:
-            self._context = ssl._create_unverified_context()
-        else:
-            self._context = context
-
-        RestHttp.__init__(self,  server, port, uri_base, user, password,
-                          debug_print)
-
-    def _connection(self):
-        conn = HTTPSConnection(self._server, self._port, context=self._context)
-        conn.connect()
-        return conn
