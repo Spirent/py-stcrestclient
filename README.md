@@ -4,6 +4,8 @@ The stcrestclient package provides the stchttp.py ReST API wrapper module.  This
 
 The stcrestclient package also includes the command-line shell `tccsh` that lets you work interactively with remote STC sessions via the ReST API.
 
+Basic ReST functionality is provided by the resthttp module, and may be used for writing ReST clients independent of STC.  This module is built on top of the [Requests](http://docs.python-requests.org/) package.
+
 All code works with Python2.7 and Python3.x.
 
 ## Project Links
