@@ -11,8 +11,6 @@ the StcHttp object.
 from __future__ import absolute_import
 from __future__ import print_function
 
-__author__ = 'Andrew Gillis'
-
 import time
 import os
 import socket
@@ -71,9 +69,10 @@ class StcHttp(object):
             try:
                 rest.get_request('sessions')
                 break
-            except (socket.error, resthttp.RestHttpError):
+            except (socket.error, resthttp.ConnectionError,
+                    resthttp.RestHttpError):
                 if not try_ports:
-                    raise RuntimeError('Cannot connect to server: %s:%s' %
+                    raise RuntimeError('Cannot connect to STC server: %s:%s' %
                                        (server, port))
 
         rest.add_header('X-Spirent-API-Version', str(api_version))
@@ -159,13 +158,15 @@ class StcHttp(object):
         if end_tcsession:
             try:
                 status, data = self._rest.delete_request('sessions', sid)
+                if self._dbg_print:
+                    print('===> OK - deleted session on server')
             except resthttp.RestHttpError as e:
                 raise RuntimeError('failed to end session: ' + str(e))
             time.sleep(7)
 
         self._rest.del_header('X-STC-API-Session')
         if self._dbg_print:
-            print('===> OK - deleted')
+            print('===> OK - ended client session')
         return True
 
     def debug_print(self):

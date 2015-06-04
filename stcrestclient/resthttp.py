@@ -10,8 +10,6 @@ import sys
 
 import requests
 
-__author__ = 'Andrew Gillis'
-
 
 class RestHttpError(Exception):
 
@@ -20,7 +18,7 @@ class RestHttpError(Exception):
 
     """
 
-    def __init__(self, http_status, http_reason, msg, code=None):
+    def __init__(self, http_status, http_reason, msg=None, code=None):
         self.http_status = int(http_status)
         self.http_error = '%s %s' % (http_status, http_reason)
         self.msg = msg
@@ -32,11 +30,44 @@ class RestHttpError(Exception):
 
     def __str__(self):
         """Get error message."""
-        return self.msg
+        if self.msg:
+            return '%s: %s' % (self.http_error, self.msg)
+        return self.http_error
 
     def code(self):
         """Get API error code."""
         return self.code
+
+    def status(self):
+        """Get HTTP status."""
+        return self.http_status
+
+
+class ConnectionError(Exception):
+
+    def __init__(self, message, code, detail=None):
+        if detail:
+            self.msg = '%s: %s' % (message.rstrip('.'), detail)
+        else:
+            self.msg = message.rstrip('.')
+
+        self.code = int(code)
+
+    def __int__(self):
+        """Get errno value."""
+        return self.code
+
+    def __str__(self):
+        """Get error message."""
+        return self.msg
+
+    def __repr__(self):
+        """Get object representation string."""
+        if self.msg.find(': ') != -1:
+            m, d = self.msg.split(': ', 1)
+            return 'ConnectionError(message=%s, code=%d, detail=%s)' % (
+                m, self.code, d)
+        return 'ConnectionError(message=%s, code=%d)' % (self.msg, self.code)
 
 
 class RestHttp(object):
@@ -139,8 +170,14 @@ class RestHttp(object):
         url = self.make_url(container, resource)
         headers = self._make_headers(None)
 
-        rsp = requests.head(url, headers=self._base_headers,
-                            verify=self._verify)
+        try:
+            rsp = requests.head(url, headers=self._base_headers,
+                                verify=self._verify)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
+
         if self._dbg_print:
             self.__print_req('HEAD', rsp.url, headers, None)
 
@@ -156,8 +193,14 @@ class RestHttp(object):
             url += RestHttp._list_query_str(query_items)
             query_items = None
 
-        rsp = requests.get(url, query_items, headers=headers,
-                           verify=self._verify)
+        try:
+            rsp = requests.get(url, query_items, headers=headers,
+                               verify=self._verify)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
+
         if self._dbg_print:
             self.__print_req('GET', rsp.url, headers, None)
 
@@ -169,8 +212,14 @@ class RestHttp(object):
         url = self.make_url(container, resource)
         headers = self._make_headers(accept)
 
-        rsp = requests.post(url, params, headers=headers,
-                            verify=self._verify)
+        try:
+            rsp = requests.post(url, params, headers=headers,
+                                verify=self._verify)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
+
         if self._dbg_print:
             self.__print_req('POST', rsp.url, headers, params)
 
@@ -182,8 +231,14 @@ class RestHttp(object):
         url = self.make_url(container, resource)
         headers = self._make_headers(accept)
 
-        rsp = requests.put(url, params, headers=headers,
-                           verify=self._verify)
+        try:
+            rsp = requests.put(url, params, headers=headers,
+                               verify=self._verify)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
+
         if self._dbg_print:
             self.__print_req('PUT', rsp.url, headers, params)
 
@@ -194,7 +249,13 @@ class RestHttp(object):
         url = self.make_url(container, resource)
         headers = self._make_headers(accept)
 
-        rsp = requests.delete(url, headers=headers, verify=self._verify)
+        try:
+            rsp = requests.delete(url, headers=headers, verify=self._verify)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
+
         if self._dbg_print:
             self.__print_req('DELETE', rsp.url, headers, None)
 
@@ -213,8 +274,14 @@ class RestHttp(object):
             url += RestHttp._list_query_str(query_items)
             query_items = None
 
-        rsp = requests.get(url, query_items, headers=headers, stream=True,
-                           verify=self._verify)
+        try:
+            rsp = requests.get(url, query_items, headers=headers, stream=True,
+                               verify=self._verify)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
+
         if self._dbg_print:
             self.__print_req('GET', rsp.url, headers, None)
 
@@ -259,7 +326,13 @@ class RestHttp(object):
             method = 'POST'
             url = self.make_url(container, None, None)
         with open(src_file_path, 'rb') as up_file:
-            rsp = requests.request(method, url, headers=headers, data=up_file)
+            try:
+                rsp = requests.request(method, url, headers=headers,
+                                       data=up_file)
+            except requests.exceptions.ConnectionError as e:
+                msg, err = e.message
+                num, detail = err
+                raise ConnectionError(msg, num, detail)
 
         return self._handle_response(rsp)
 
@@ -276,7 +349,12 @@ class RestHttp(object):
         headers = self._base_headers
         with open(src_file_path, 'rb') as up_file:
             files = {'file': (dst_name, up_file, content_type)}
-            rsp = requests.post(url, headers=headers, files=files)
+            try:
+                rsp = requests.post(url, headers=headers, files=files)
+            except requests.exceptions.ConnectionError as e:
+                msg, err = e.message
+                num, detail = err
+                raise ConnectionError(msg, num, detail)
 
         return self._handle_response(rsp)
 
@@ -296,13 +374,16 @@ class RestHttp(object):
                     ('files', (dst_name, open(src_path, 'rb'), content_type)))
 
             rsp = requests.post(url, headers=headers, files=multi_files)
+        except requests.exceptions.ConnectionError as e:
+            msg, err = e.message
+            num, detail = err
+            raise ConnectionError(msg, num, detail)
         finally:
             for n, info in multi_files:
                 dst, f, ctype = info
                 f.close()
 
         return self._handle_response(rsp)
-
 
     ###########################################################################
     # private methods
@@ -319,9 +400,15 @@ class RestHttp(object):
         if self._dbg_print:
             print('===> response status:', rsp.status_code, rsp.reason)
 
+        ct_app_json = 'application/json'
         data = None
         if rsp.status_code != 204:
-            data = rsp.json()
+            if rsp.headers.get('content-type', ct_app_json) == ct_app_json:
+                try:
+                    data = rsp.json()
+                except Exception:
+                    data = None
+
             if data is None:
                 data = rsp.content
 
@@ -338,19 +425,18 @@ class RestHttp(object):
 
         if rsp.status_code >= 300:
             code = None
-            if data:
+            detail = None
+            if data and rsp.headers.get('content-type') == ct_app_json:
                 if isinstance(data, dict):
                     if 'detail' in data:
                         detail = data['detail']
                     elif 'message' in data:
                         detail = data['message']
-                    else:
+                    elif data:
                         detail = 'unknown error: ' + str(data)
                     code = data.get('code')
                 else:
                     detail = 'unknown error: ' + str(data)
-            else:
-                detail = ''
 
             raise RestHttpError(rsp.status_code, rsp.reason, detail, code)
 
@@ -392,4 +478,3 @@ class RestHttp(object):
         if params:
             print('  --- Params ---')
             print('   ', params)
-

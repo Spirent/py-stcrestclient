@@ -12,8 +12,6 @@ Type help to see help info.  Use <TAB> for command auto-completion.
 from __future__ import absolute_import
 from __future__ import print_function
 
-__author__ = 'Andrew Gillis'
-
 import os
 import sys
 import socket
@@ -140,11 +138,11 @@ class TestCenterCommandShell(cmd.Cmd):
         """Join the specified session: join testA - jdoe"""
         if self._not_session(session):
             return
-        #try:
-        #    bll_ver = self._stc.join_session(session)
-        #except Exception as e:
-        #    print(e)
-        #    return
+        try:
+            bll_ver = self._stc.join_session(session)
+        except Exception as e:
+            print(e)
+            return
         bll_ver = self._stc.join_session(session)
         self._joined = session
         print('Joined session "%s" (BLL ver: %s)' % (session, bll_ver))
@@ -602,14 +600,14 @@ class TestCenterCommandShell(cmd.Cmd):
         confirmed = None
         default_input = 'y' if default else 'n'
         while confirmed is None:
-             prompt = '%s "%s" (y/n) [%s]: ' % (prompt, value, default_input)
-             yn = input(prompt).lower()
-             if yn in ('y', 'yes'):
-                 confirmed = True
-             elif yn in ('n', 'no'):
-                 confirmed = False
-             else:
-                 confirmed = default
+            prompt = '%s "%s" (y/n) [%s]: ' % (prompt, value, default_input)
+            yn = input(prompt).lower()
+            if yn in ('y', 'yes'):
+                confirmed = True
+            elif yn in ('n', 'no'):
+                confirmed = False
+            else:
+                confirmed = default
 
         return confirmed
 
@@ -668,7 +666,7 @@ def main():
     if debug:
         print('===> connecting to', server, end=' ')
         if port:
-              print('on port', port)
+            print('on port', port)
         else:
             print()
 
@@ -681,7 +679,7 @@ def main():
             socket.gethostbyname(server)
             server_ok = True
         except socket.gaierror as e:
-            print(e)
+            print('hostname not known')
             server = None
 
     tccsh = TestCenterCommandShell()
@@ -689,7 +687,7 @@ def main():
     tccsh._port = port
     try:
         tccsh._stc = stchttp.StcHttp(server, port, debug_print=debug)
-    except RuntimeError as e:
+    except Exception as e:
         print(e)
         return 1
 
