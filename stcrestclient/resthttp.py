@@ -400,10 +400,10 @@ class RestHttp(object):
         if self._dbg_print:
             print('===> response status:', rsp.status_code, rsp.reason)
 
-        ct_app_json = 'application/json'
+        app_json = 'application/json'
         data = None
         if rsp.status_code != 204:
-            if rsp.headers.get('content-type', ct_app_json) == ct_app_json:
+            if rsp.headers.get('content-type', app_json).startswith(app_json):
                 try:
                     data = rsp.json()
                 except Exception:
@@ -426,7 +426,8 @@ class RestHttp(object):
         if rsp.status_code >= 300:
             code = None
             detail = None
-            if data and rsp.headers.get('content-type') == ct_app_json:
+            if (data and
+                rsp.headers.get('content-type', '').startswith(app_json)):
                 if isinstance(data, dict):
                     if 'detail' in data:
                         detail = data['detail']
