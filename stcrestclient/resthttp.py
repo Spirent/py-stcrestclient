@@ -322,7 +322,7 @@ class RestHttp(object):
         data = None
         if rsp.status_code != 204:
             data = rsp.json()
-            if not data:
+            if data is None:
                 data = rsp.content
 
             if data and sys.version < '3':
