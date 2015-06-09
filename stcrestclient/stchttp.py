@@ -415,7 +415,7 @@ class StcHttp(object):
                 'connections', chassis_list[0])
             data = [data]
         else:
-            params = {chassis: None for chassis in chassis_list}
+            params = {chassis: True for chassis in chassis_list}
             params['action'] = 'connect'
             status, data = self._rest.post_request('connections', None, params)
         return data
@@ -434,7 +434,7 @@ class StcHttp(object):
         if len(chassis_list) == 1:
             self._rest.delete_request('connections', chassis_list[0])
         else:
-            params = {chassis: None for chassis in chassis_list}
+            params = {chassis: True for chassis in chassis_list}
             params['action'] = 'disconnect'
             self._rest.post_request('connections', None, params)
 

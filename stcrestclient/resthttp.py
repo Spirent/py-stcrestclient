@@ -213,7 +213,7 @@ class RestHttp(object):
         headers = self._make_headers(accept)
 
         try:
-            rsp = requests.post(url, params, headers=headers,
+            rsp = requests.post(url, data=params, headers=headers,
                                 verify=self._verify)
         except requests.exceptions.ConnectionError as e:
             msg, err = e.message
