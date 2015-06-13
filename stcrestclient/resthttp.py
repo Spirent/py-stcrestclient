@@ -174,9 +174,7 @@ class RestHttp(object):
             rsp = requests.head(url, headers=self._base_headers,
                                 verify=self._verify)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
 
         if self._dbg_print:
             self.__print_req('HEAD', rsp.url, headers, None)
@@ -197,9 +195,7 @@ class RestHttp(object):
             rsp = requests.get(url, query_items, headers=headers,
                                verify=self._verify)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
 
         if self._dbg_print:
             self.__print_req('GET', rsp.url, headers, None)
@@ -216,9 +212,7 @@ class RestHttp(object):
             rsp = requests.post(url, data=params, headers=headers,
                                 verify=self._verify)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
 
         if self._dbg_print:
             self.__print_req('POST', rsp.url, headers, params)
@@ -235,9 +229,7 @@ class RestHttp(object):
             rsp = requests.put(url, params, headers=headers,
                                verify=self._verify)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
 
         if self._dbg_print:
             self.__print_req('PUT', rsp.url, headers, params)
@@ -252,9 +244,7 @@ class RestHttp(object):
         try:
             rsp = requests.delete(url, headers=headers, verify=self._verify)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
 
         if self._dbg_print:
             self.__print_req('DELETE', rsp.url, headers, None)
@@ -278,9 +268,7 @@ class RestHttp(object):
             rsp = requests.get(url, query_items, headers=headers, stream=True,
                                verify=self._verify)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
 
         if self._dbg_print:
             self.__print_req('GET', rsp.url, headers, None)
@@ -330,9 +318,7 @@ class RestHttp(object):
                 rsp = requests.request(method, url, headers=headers,
                                        data=up_file)
             except requests.exceptions.ConnectionError as e:
-                msg, err = e.message
-                num, detail = err
-                raise ConnectionError(msg, num, detail)
+                RestHttp._raise_conn_error(e)
 
         return self._handle_response(rsp)
 
@@ -352,9 +338,7 @@ class RestHttp(object):
             try:
                 rsp = requests.post(url, headers=headers, files=files)
             except requests.exceptions.ConnectionError as e:
-                msg, err = e.message
-                num, detail = err
-                raise ConnectionError(msg, num, detail)
+                RestHttp._raise_conn_error(e)
 
         return self._handle_response(rsp)
 
@@ -375,9 +359,7 @@ class RestHttp(object):
 
             rsp = requests.post(url, headers=headers, files=multi_files)
         except requests.exceptions.ConnectionError as e:
-            msg, err = e.message
-            num, detail = err
-            raise ConnectionError(msg, num, detail)
+            RestHttp._raise_conn_error(e)
         finally:
             for n, info in multi_files:
                 dst, f, ctype = info
@@ -470,6 +452,19 @@ class RestHttp(object):
         elif isinstance(data, str):
             return data.lower()
         return data
+
+    @staticmethod
+    def _raise_conn_error(e):
+        if isinstance(e, requests.exceptions.SSLError):
+            raise ConnectionError(str(e), -1)
+        try:
+            msg, err = e.message
+            num, detail = err
+        except:
+            msg = str(e)
+            num = -1
+            detail = None
+        raise ConnectionError(msg, num, detail)
 
     def __print_req(self, method, url, headers, params):
         print('===> %s %s' % (method, url))
