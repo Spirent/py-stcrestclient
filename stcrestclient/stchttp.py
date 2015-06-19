@@ -22,9 +22,9 @@ except ValueError:
 
 # Use this port if it is not specified when creating StcHttp, or by the
 # STC_SERVER_PORT environment variable.
-DEFAULT_PORT = 8888
+DEFAULT_PORT = 80
 # Use this port if port not specified and default port does not work.
-ALT_PORT = 80
+ALT_PORT = 8888
 
 
 class StcHttp(object):
@@ -254,6 +254,7 @@ class StcHttp(object):
         return data['version']
 
     def system_info(self):
+        """Return dictionary of STC and API information."""
         status, data = self._rest.get_request('system')
         return data
 

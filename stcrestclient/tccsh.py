@@ -17,6 +17,7 @@ import sys
 import socket
 import cmd
 import shlex
+import time
 
 try:
     from . import stchttp
@@ -37,6 +38,7 @@ class TestCenterCommandShell(cmd.Cmd):
     _sessions = []
     _server = None
     _port = None
+    _recording_path = None
 
     def preloop(self):
         # Do this once before entering command loop.
@@ -45,10 +47,20 @@ class TestCenterCommandShell(cmd.Cmd):
 
     def postcmd(self, stop, line):
         # Do this after executing each command.
+        if not self.use_rawinput:
+            self.prompt = ''
+            return stop
+
         if self._joined:
             self.prompt = '%s:%s> ' % (self._server, self._joined)
         else:
             self.prompt = '%s:> ' % (self._server,)
+
+        if self._recording_path:
+            self.prompt = '*' + self.prompt
+            if not line.startswith('recording_'):
+                with open(self._recording_path, 'a') as outf:
+                    print(line, file=outf)
         return stop
 
     def do_ls(self, s):
@@ -58,12 +70,12 @@ class TestCenterCommandShell(cmd.Cmd):
         self._update_sessions()
         info = (s == '-l')
         for session in self._sessions:
-            if session == self._joined:
-                print('  [%s] <-- current session' % (session,))
-            else:
-                print(' ', session)
             if info:
                 self.do_info(session)
+            elif session == self._joined:
+                print('[%s] <-- current session' % (session,))
+            else:
+                print(session)
 
     def do_info(self, session):
         """Show information about the specified session: info testA - jdoe"""
@@ -72,6 +84,7 @@ class TestCenterCommandShell(cmd.Cmd):
             if not session:
                 print('no session specified')
                 return
+        print(session)
         info = self._stc.session_info(session)
         for k in info:
             print('  %s: %s' % (k, info[k]))
@@ -132,7 +145,7 @@ class TestCenterCommandShell(cmd.Cmd):
         if self._not_joined():
             return
         for f in self._stc.files():
-            print(' ', f)
+            print(f)
 
     def do_join(self, session):
         """Join the specified session: join testA - jdoe"""
@@ -158,6 +171,39 @@ class TestCenterCommandShell(cmd.Cmd):
         """Disable debug printing."""
         self._stc.disable_debug_print()
 
+    def do_recording_on(self, file_path):
+        """Enable recording commands to a file.
+
+        Commands recorded to a file can be executed later through tccsh.  This
+        is done by specifying the file, containing the recorded commands, using
+        the --file command line option.
+
+        When the recording feature is enabled, a '*' appears in the prompt.
+        """
+        if not file_path:
+            print('save file not given')
+            return
+
+        if (os.path.isfile(file_path) and self.use_rawinput and
+            not self._confirm('Overwrite file', file_path)):
+                print('recording not enabled')
+                return
+
+        with open(file_path, 'w') as outf:
+            print('# tccsh commands recorded on:', time.ctime(), file=outf)
+            print('#\n# Comment lines (starting with "#") and blank lines '
+                  'are ignored.\n# To execute the commands in ths file:\n'
+                  '#    python -m stcrestclient.tccsh server --file ',
+                  file_path, '\n#', file=outf)
+
+        print('recording enabled')
+        self._recording_path = file_path
+
+    def do_recording_off(self, s):
+        """Stop recording commands."""
+        self._recording_path = None
+        print('recording disabled')
+
     def do_exit(self, s):
         """Exit the SessionManager shell."""
         return True
@@ -166,11 +212,18 @@ class TestCenterCommandShell(cmd.Cmd):
         """End the current session."""
         if self._not_joined():
             return
-        yn = self._confirm('End test session', self._joined)
+        if self.use_rawinput:
+            yn = self._confirm('End test session', self._joined)
+        else:
+            yn = True
         try:
             self._stc.end_session(yn)
         except RuntimeError as e:
             print(e)
+        if yn:
+            print('Terminated test session', self._joined)
+        else:
+            print('Detached from test session', self._joined)
         self._joined = None
 
     def do_server(self, server):
@@ -178,8 +231,8 @@ class TestCenterCommandShell(cmd.Cmd):
 
         If a port is not specified, then the value of the STC_SERVER_PORT
         environment variable is used.  If that is not set, then the default
-        port 8888 is tried.  If a connection cannot be make to 8888, then port
-        80 is used.
+        port 80 is tried.  If a connection cannot be make to the default, then
+        port 8888 is used.
 
         Synopsis:
             server server_address [port]
@@ -209,14 +262,6 @@ class TestCenterCommandShell(cmd.Cmd):
         self._server = server
         self._joined = None
         self._sessions = []
-
-    def do_upgrade(self, s):
-        """Upgrade server."""
-        print("not implemented")
-
-    def do_results(self, s):
-        """Get result files from test session."""
-        print("not implemented")
 
     def do_upload(self, file_path):
         """Upload a file to the session: upload sample.tcc"""
@@ -257,8 +302,8 @@ class TestCenterCommandShell(cmd.Cmd):
                 print(save_name, 'is a directory')
                 return None
             if os.path.isfile(save_name):
-                yn = self._confirm('overwrite', save_name)
-                if not yn:
+                if (self.use_rawinput and
+                    not self._confirm('overwrite', save_name)):
                     return None
             return save_name
 
@@ -290,7 +335,7 @@ class TestCenterCommandShell(cmd.Cmd):
         """
         sys_info = self._stc.system_info()
         for k in sys_info:
-            print('  ', k, ': ', sys_info[k], sep='')
+            print(k, ': ', sys_info[k], sep='')
 
     ###########################################################################
     # Automation API
@@ -338,7 +383,7 @@ class TestCenterCommandShell(cmd.Cmd):
 
         if isinstance(result, dict):
             for k in result:
-                print('  ', k, ': ', result[k], sep='')
+                print(k, ': ', result[k], sep='')
         else:
             print(' '.join(result))
 
@@ -444,7 +489,7 @@ class TestCenterCommandShell(cmd.Cmd):
             return
 
         for c in chassis:
-            print(' ', c)
+            print(c)
 
     def do_chassis_info(self, chassis):
         """Get information about the specified chassis.
@@ -465,7 +510,7 @@ class TestCenterCommandShell(cmd.Cmd):
             return
 
         for k in info:
-            print('  ', k, ': ', info[k], sep='')
+            print(k, ': ', info[k], sep='')
 
     def do_connections(self, param):
         """Get the connected status of each chassis in the test session."""
@@ -580,6 +625,10 @@ class TestCenterCommandShell(cmd.Cmd):
         except resthttp.RestHttpError as e:
             print(e)
 
+    #def do_EOF(self, s):
+    #    """Exit the SessionManager shell."""
+    #    return True
+
     ###########################################################################
     # Utility methods
     #
@@ -634,34 +683,70 @@ class TestCenterCommandShell(cmd.Cmd):
         return params
 
 
+def show_help(prg):
+    print('Usage: python -m stcrestclient.tccsh server [options]')
+    print()
+    print('Options:')
+    print('  -c command_string\n'
+          '      Command string.  Commands are separated by ";" (semicolon).')
+    print()
+    print('  -d, --debug\n'
+          '      Enable debug output.')
+    print()
+    print('  -f, --file file_path\n'
+          '      Read commands from the specified file.')
+    print()
+    print('  -h, --help\n'
+          '      Prints this help information.')
+    print()
+    print('  -p, --port port_num\n'
+          '      Server port to connect to (default %s).' %
+          (stchttp.DEFAULT_PORT,))
+    print()
+
+
 def main():
     debug = False
     server = None
     port = None
+    cmd_file = None
+    cmd_str = None
     prg = sys.argv.pop(0)
-    while sys.argv:
-        arg = sys.argv.pop(0)
-        if arg in ('--debug', '-d'):
-            debug = True
-        elif arg in ('--port', '-p'):
-            if not sys.argv:
-                print('missing value after', arg, file=sys.stderr)
-                print('see:', prg, '--help', file=sys.stderr)
+    missing_val = 'missing value after: '
+    try:
+        while sys.argv:
+            arg = sys.argv.pop(0)
+            if arg in ('--debug', '-d'):
+                debug = True
+            elif arg in ('--file', '-f'):
+                if not sys.argv:
+                    raise RuntimeError(missing_val + arg)
+                if cmd_str:
+                    raise RuntimeError('cannot specify -c and -f together')
+                cmd_file = sys.argv.pop(0)
+            elif arg == '-c':
+                if not sys.argv:
+                    raise RuntimeError(missing_val + arg)
+                if cmd_file:
+                    raise RuntimeError('cannot specify -c and -f together')
+                cmd_str = sys.argv.pop(0)
+            elif arg in ('--port', '-p'):
+                if not sys.argv:
+                    raise RuntimeError(missing_val + arg)
+                port = int(sys.argv.pop(0))
+            elif arg in ('--help', '-h', '-?'):
+                show_help(prg)
+                return 0
+            elif arg[0] == '-':
+                raise RuntimeError('unrecognized argument: ' + arg)
                 return 1
-            port = int(sys.argv.pop(0))
-        elif arg in ('--help', '-h', '-?'):
-            print('Usage: ', prg, '[options] server', file=sys.stderr)
-            print('Options:', file=sys.stderr)
-            print('    -d, --debug  Enable debug output', file=sys.stderr)
-            print('    -p, --port  Server port to connect to (default 8888)',
-                  file=sys.stderr)
-            return 0
-        elif arg[0] == '-':
-            print('unrecognized argument:', arg, file=sys.stderr)
-            print('see:', prg, '--help', file=sys.stderr)
-            return 1
-        else:
-            server = arg
+            else:
+                server = arg
+
+    except RuntimeError as e:
+        print(e, file=sys.stderr)
+        print('see:', prg, '--help', file=sys.stderr)
+        return 1
 
     if debug:
         print('===> connecting to', server, end=' ')
@@ -682,19 +767,48 @@ def main():
             print('hostname not known')
             server = None
 
-    tccsh = TestCenterCommandShell()
+    cmds = []
+    if cmd_file:
+        with open(cmd_file) as cf:
+            for cmd in cf:
+                if not cmd:
+                    continue
+                cmd = cmd.strip()
+                if not cmd or cmd[0] == '#':
+                    continue
+                cmds.append(cmd)
+    elif cmd_str:
+        for cmd in cmd_str.split(';'):
+            if not cmd:
+                continue
+            cmd = cmd.strip()
+            if not cmd or cmd[0] == '#':
+                continue
+            cmds.append(cmd)
+
+    if cmds:
+        tccsh = TestCenterCommandShell(None)
+        tccsh.use_rawinput = False
+        tccsh.intro = None
+    else:
+        tccsh = TestCenterCommandShell()
+
     tccsh._server = server
     tccsh._port = port
     try:
         tccsh._stc = stchttp.StcHttp(server, port, debug_print=debug)
+        if cmds:
+            tccsh.preloop()
+            for cmd in cmds:
+                if tccsh.onecmd(cmd):
+                    break
+        else:
+            tccsh.cmdloop()
+    except KeyboardInterrupt:
+        print('\nGot keyboard interrupt. Exiting...')
     except Exception as e:
         print(e)
         return 1
-
-    try:
-        tccsh.cmdloop()
-    except KeyboardInterrupt:
-        print('\nGot keyboard interrupt. Exiting...')
 
     return 0
 
