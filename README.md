@@ -96,6 +96,9 @@ stc.apply()
 # Run STAK command to archive log files
 stc.perform('spirent.core.ArchiveDiagnosticLogsCommand')
 
+# Write a message to the log file
+stc.log('INFO', 'Done with my test')
+
 # Get a list of available files
 files_list = stc.files()
 
@@ -121,24 +124,29 @@ To start the shell, use the following command:
 
 You will be prompted for the server address to connect to.  You can also supply the server address on the command line: `python -m stcrestclient.tccsh 10.8.232.105`  To see command line options: `python python -m stcrestclient.tccsh --help`
 
-    Usage: python -m stcrestclient.tccsh server [options]
+    usage: python -m stcrestclient.tccsh server [options]
 
-	Options:
-	  -c command_string
-	        Command string.  Commands are separated by ";" (semicolon).
+    Command shell that provides STC Automation API functionality using an
+    interactive command line interface, or command file.
 
-	  -d, --debug
-	        Enable debug output.
+    positional arguments:
+      server                Address of TestCenter server to connect to.
 
-	  -f, --file file_path
-	        Read commands from the specified file.
+    optional arguments:
+      -h, --help
+          show this help message and exit
 
-	  -h, --help
-	        Prints this help information.
+      -c COMMAND_STRING
+          Command string. Multiple commands are separated by ";" (semicolon).
 
-	  -p, --port port_num
-	        Server port to connect to (default 80).
+      --debug, -d
+          Enable debug output.
 
+      --file FILE_PATH, -f FILE_PATH
+          Read commands from the specified file.
+
+      --port PORT, -p PORT
+          Server TCP port to connect to (default 80).
 
 Notice that commands can be entered from a file (--file) or from a command string (-c), as an alternative to the normal interactive mode.
 
@@ -148,16 +156,15 @@ Once started and connected to a server, you will see a prompt that contains the 
 
 Type help to see help info on the available commands.  This displays the help menu:
 
-	Documented commands (type help <topic>):
-	========================================
-	chassis       download      join           stc_config         stc_get
-	chassis_info  end           ls             stc_connect        stc_help
-	connections   exit          new            stc_connectall     stc_perform
-	debug_off     files         recording_off  stc_create         system_info
-	debug_on      help          recording_on   stc_delete         upload
-	delete        info          server         stc_disconnect
-	delete_all    is_connected  stc_apply      stc_disconnectall
-
+    Documented commands (type help <topic>):
+    ========================================
+    chassis       download      is_connected   stc_apply       stc_disconnectall
+    chassis_info  download_all  join           stc_config      stc_get
+    connections   end           ls             stc_connect     stc_help
+    debug_off     exit          new            stc_connectall  stc_log
+    debug_on      files         recording_off  stc_create      stc_perform
+    delete        help          recording_on   stc_delete      system_info
+    delete_all    info          server         stc_disconnect  upload
 
 To see help for a command, type "help" followed by the command name.  For example, type `help ls` to see help on the `ls` command.
 

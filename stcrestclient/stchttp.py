@@ -82,7 +82,8 @@ class StcHttp(object):
     def session_id(self):
         return self._sid
 
-    def new_session(self, user_name, session_name=None, kill_existing=False):
+    def new_session(self, user_name=None, session_name=None,
+                    kill_existing=False):
         """Create a new test session.
 
         The test session is identified by the specified user_name and optional
@@ -95,8 +96,10 @@ class StcHttp(object):
         """
         if self.started():
             return False
-        if not session_name:
+        if not session_name or not session_name.strip():
             session_name = ''
+        if not user_name or not user_name.strip():
+            user_name = ''
         params = {'userid': user_name, 'sessionname': session_name}
         try:
             status, data = self._rest.post_request('sessions', None, params)
@@ -124,6 +127,7 @@ class StcHttp(object):
         return sid
 
     def join_session(self, sid):
+        """Attach to an existing session."""
         self._rest.add_header('X-STC-API-Session', sid)
         self._sid = sid
         try:
@@ -132,7 +136,7 @@ class StcHttp(object):
         except resthttp.RestHttpError as e:
             self._rest.del_header('X-STC-API-Session')
             self._sid = None
-            raise RuntimeError('failed to join session: ' + str(e))
+            raise RuntimeError('failed to join session "%s": %s' % (sid, e))
 
         return data['version']
 
@@ -173,10 +177,12 @@ class StcHttp(object):
         return self._dbg_print
 
     def enable_debug_print(self):
+        """Enable debug messages."""
         self._dbg_print = True
         self._rest.enable_debug_print()
 
     def disable_debug_print(self):
+        """Disable debug messages."""
         self._dbg_print = False
         self._rest.disable_debug_print()
 
@@ -477,6 +483,23 @@ class StcHttp(object):
             status, data = self._rest.get_request('help', subject)
         return data['message']
 
+    def log(self, level, msg):
+        """Write a diagnostic message to a log file or to standard output.
+
+        Arguments:
+        level -- Severity level ofentry.  One of: INFO, WARN, ERROR, FATAL.
+        msg   -- Message to write to log.
+
+        """
+        self._check_session()
+        level = level.upper()
+        allowed_levels = ('INFO', 'WARN', 'ERROR', 'FATAL')
+        if level not in allowed_levels:
+            raise ValueError('level must be one of: ' +
+                             ', '.join(allowed_levels))
+        self._rest.post_request(
+            'log', None, {'log_level': level.upper(), 'message': msg})
+
     def download(self, file_name):
         """Download the specified file from the server."""
         self._check_session()
@@ -487,11 +510,54 @@ class StcHttp(object):
             raise RuntimeError('failed to download "%s": %s' % (file_name, e))
         return save_name, bytes
 
+    def download_all(self):
+        """Download all available files.
+
+        Return:
+        Dictionary of {file_name: file_size, ..}
+
+        """
+        saved = {}
+        for f in self.files():
+            name, bytes = self.download(f)
+            saved[name] = bytes
+        return saved
+
     def upload(self, src_file_path, dst_file_name=None):
         """Upload the specified file to the server."""
         self._check_session()
         status, data = self._rest.upload('files', src_file_path, dst_file_name)
         return data
+
+    def wait_until_complete(self, timeout=None):
+        """Wait until sequencer is finished.
+
+        This method blocks your application until the sequencer has completed
+        its operation.  It returns once the sequencer has finished.
+
+        Arguments:
+        timeout -- Optional.  Seconds to wait for sequencer to finish.  If this
+                   time is exceeded, then exception is raised.
+
+        Return:
+        Sequencer testState value.
+
+        """
+        timeout_at = None
+        if timeout:
+            timeout_at = time.time() + int(timeout)
+
+        sequencer = self.get('system1', 'children-sequencer')
+        while True:
+            cur_test_state = self.get(sequencer, 'state')
+            if 'PAUSE' in cur_test_state or 'IDLE' in cur_test_state:
+                break
+            time.sleep(2)
+            if timeout_at and time.time() >= timeout_at:
+                raise RuntimeError('wait_until_complete timed out after %s sec'
+                                   % timeout)
+
+        return self.get(sequencer, 'testState')
 
     def _check_session(self):
         if not self.started():

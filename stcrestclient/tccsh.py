@@ -1,8 +1,8 @@
 """
 Spirent TestCenter Command Shell
 
-Interactive command shell that provides Session Manager and Automation API
-functionality using a command line interface.  This command accesses a
+Command shell that provides STC Automation API functionality using an
+interactive command line interface, or command file.  This program accesses a
 TestCenter Server over its HTTP interface, so no local BLL installation is
 needed.
 
@@ -84,6 +84,8 @@ class TestCenterCommandShell(cmd.Cmd):
             if not session:
                 print('no session specified')
                 return
+        if session.endswith(' -') and session.count('-') == 1:
+            session += ' '
         print(session)
         info = self._stc.session_info(session)
         for k in info:
@@ -94,13 +96,13 @@ class TestCenterCommandShell(cmd.Cmd):
 
     def do_delete(self, session):
         """Delete the specified session: delete testA - jdoe"""
+        if session.endswith(' -') and session.count('-') == 1:
+            session += ' '
         if self._not_session(session):
             return
-        if session == self._joined:
-            print('you must first end this session')
-            return
         try:
-            self._stc.join_session(session)
+            if session != self._joined:
+                self._stc.join_session(session)
             self._stc.end_session()
         except RuntimeError as e:
             print(e)
@@ -108,7 +110,7 @@ class TestCenterCommandShell(cmd.Cmd):
     def complete_delete(self, text, line, begidx, endidx):
         return self._complete_session(text)
 
-    def do_delete_all(self, session):
+    def do_delete_all(self, s):
         """Delete all sessions from server."""
         self._update_sessions()
         for session in self._sessions:
@@ -122,15 +124,13 @@ class TestCenterCommandShell(cmd.Cmd):
             # End the current session, without deleting TC session.
             self._stc.end_session(False)
             self._joined = None
+        user_name = 'anonymous'
+        session_name = None
         params = s.split()
         if params:
             user_name = params.pop(0)
-        else:
-            user_name = 'anonymous'
         if params:
             session_name = params.pop(0)
-        else:
-            session_name = None
         try:
             sid = self._stc.new_session(user_name, session_name)
         except Exception as e:
@@ -144,11 +144,17 @@ class TestCenterCommandShell(cmd.Cmd):
         """List the files available in the current session."""
         if self._not_joined():
             return
-        for f in self._stc.files():
-            print(f)
+        try:
+            for f in self._stc.files():
+                print(f)
+        except Exception as e:
+            print(e)
+            return
 
     def do_join(self, session):
         """Join the specified session: join testA - jdoe"""
+        if session.endswith(' -') and session.count('-') == 1:
+            session += ' '
         if self._not_session(session):
             return
         try:
@@ -320,6 +326,22 @@ class TestCenterCommandShell(cmd.Cmd):
             return
 
         print('wrote %s bytes to %s' % (bytes, save_name))
+
+    def do_download_all(self, s):
+        """Download all available files.
+
+        This command will not prompt before overwriting existing files.
+        """
+        try:
+            saves = self._stc.download_all()
+        except RuntimeError as e:
+            print(e)
+            return
+
+        if saves:
+            print('Downloaded files:')
+            for name in saves:
+                print('%s (size=%s)' % (name, saves[name]))
 
     def complete_download(self, text, line, begidx, endidx):
         files = self._stc.files()
@@ -609,6 +631,40 @@ class TestCenterCommandShell(cmd.Cmd):
             return
         print('OK')
 
+    def do_stc_log(self, s):
+        """Write a diagnostic message to a log file or to standard output.
+
+        Synopsis:
+            stc_log level message
+
+        Example:
+            stc_log ERROR Something unfortunate happened
+
+        The log level can be one of: INFO, WARN, ERROR, FATAL
+        """
+        if self._not_joined():
+            return
+        level = msg = None
+        params = s.split(' ', 1)
+        if params:
+            level = params.pop(0).strip().upper()
+        if params:
+            msg = params.pop(0).strip()
+
+        if not level:
+            print('missing argument: level')
+            return
+        if not msg:
+            print('missing argument: message')
+            return
+        try:
+            self._stc.log(level, msg)
+        except Exception as e:
+            print(e)
+            return
+
+        print('logged', level, 'message:', msg)
+
     def do_stc_help(self, subject):
         """Get help information about Automation API: help subject
 
@@ -668,7 +724,7 @@ class TestCenterCommandShell(cmd.Cmd):
 
     def _not_session(self, session):
         if session not in self._sessions:
-            print('no such session')
+            print('no such session: "%s"' % (session,))
             return True
         return False
 
@@ -706,85 +762,64 @@ def show_help(prg):
 
 
 def main():
-    debug = False
-    server = None
-    port = None
-    cmd_file = None
-    cmd_str = None
-    prg = sys.argv.pop(0)
-    missing_val = 'missing value after: '
-    try:
-        while sys.argv:
-            arg = sys.argv.pop(0)
-            if arg in ('--debug', '-d'):
-                debug = True
-            elif arg in ('--file', '-f'):
-                if not sys.argv:
-                    raise RuntimeError(missing_val + arg)
-                if cmd_str:
-                    raise RuntimeError('cannot specify -c and -f together')
-                cmd_file = sys.argv.pop(0)
-            elif arg == '-c':
-                if not sys.argv:
-                    raise RuntimeError(missing_val + arg)
-                if cmd_file:
-                    raise RuntimeError('cannot specify -c and -f together')
-                cmd_str = sys.argv.pop(0)
-            elif arg in ('--port', '-p'):
-                if not sys.argv:
-                    raise RuntimeError(missing_val + arg)
-                port = int(sys.argv.pop(0))
-            elif arg in ('--help', '-h', '-?'):
-                show_help(prg)
-                return 0
-            elif arg[0] == '-':
-                raise RuntimeError('unrecognized argument: ' + arg)
-                return 1
-            else:
-                server = arg
-
-    except RuntimeError as e:
-        print(e, file=sys.stderr)
-        print('see:', prg, '--help', file=sys.stderr)
-        return 1
-
-    if debug:
-        print('===> connecting to', server, end=' ')
-        if port:
-            print('on port', port)
-        else:
-            print()
+    import argparse
+    ap = argparse.ArgumentParser(
+        prog='python -m stcrestclient.tccsh',
+        usage='python -m stcrestclient.tccsh server [options]',
+        description='Command shell that provides STC Automation API '
+        'functionality using an interactive command line interface, or '
+        'command file.')
+    ap.add_argument('server', nargs='?',
+                    help='Address of TestCenter server to connect to.')
+    ap.add_argument('-c', metavar='COMMAND_STRING', dest='cmd_str',
+                    help='Command string.  Multiple commands are separated '
+                    'by ";" (semicolon).')
+    ap.add_argument('--debug', '-d', action='store_true',
+                    help='Enable debug output.')
+    ap.add_argument('--file', '-f', metavar='FILE_PATH', dest='cmd_file',
+                    help='Read commands from the specified file.')
+    ap.add_argument('--port', '-p', metavar='PORT', type=int,
+                    help='Server TCP port to connect to (default %s).'
+                    % (stchttp.DEFAULT_PORT,))
+    args = ap.parse_args()
 
     server_ok = False
     while not server_ok:
-        while not server:
-            server = input('Enter server: ')
+        while not args.server:
+            args.server = input('Enter server: ')
 
         try:
-            socket.gethostbyname(server)
+            socket.gethostbyname(args.server)
             server_ok = True
         except socket.gaierror as e:
             print('hostname not known')
-            server = None
+            args.server = None
+
+    if args.debug:
+        print('===> connecting to', args.server, end=' ')
+        if args.port:
+            print('on port', args.port)
+        else:
+            print()
 
     cmds = []
-    if cmd_file:
-        with open(cmd_file) as cf:
-            for cmd in cf:
-                if not cmd:
+    if args.cmd_file:
+        with open(args.cmd_file) as cf:
+            for c in cf:
+                if not c:
                     continue
-                cmd = cmd.strip()
-                if not cmd or cmd[0] == '#':
+                c = c.strip()
+                if not c or c[0] == '#':
                     continue
-                cmds.append(cmd)
-    elif cmd_str:
-        for cmd in cmd_str.split(';'):
-            if not cmd:
+                cmds.append(c)
+    elif args.cmd_str:
+        for c in args.cmd_str.split(';'):
+            if not c:
                 continue
-            cmd = cmd.strip()
-            if not cmd or cmd[0] == '#':
+            c = c.strip()
+            if not c or c[0] == '#':
                 continue
-            cmds.append(cmd)
+            cmds.append(c)
 
     if cmds:
         tccsh = TestCenterCommandShell(None)
@@ -793,14 +828,15 @@ def main():
     else:
         tccsh = TestCenterCommandShell()
 
-    tccsh._server = server
-    tccsh._port = port
+    tccsh._server = args.server
+    tccsh._port = args.port
     try:
-        tccsh._stc = stchttp.StcHttp(server, port, debug_print=debug)
+        tccsh._stc = stchttp.StcHttp(args.server, args.port,
+                                     debug_print=args.debug)
         if cmds:
             tccsh.preloop()
-            for cmd in cmds:
-                if tccsh.onecmd(cmd):
+            for c in cmds:
+                if tccsh.onecmd(c):
                     break
         else:
             tccsh.cmdloop()

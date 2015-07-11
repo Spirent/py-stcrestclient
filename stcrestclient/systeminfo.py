@@ -31,7 +31,7 @@ def stc_system_info(stc_addr):
         sys_info = stc.system_info()
     else:
         # Create a new session to get STC information.
-        sid = stc.new_session('anonymous')
+        stc.new_session('anonymous')
         try:
             sys_info = stc.system_info()
         finally:
