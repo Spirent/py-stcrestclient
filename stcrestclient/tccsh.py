@@ -406,8 +406,7 @@ class TestCenterCommandShell(cmd.Cmd):
         if isinstance(result, dict):
             for k in result:
                 print(k, ': ', result[k], sep='')
-        else:
-            print(' '.join(result))
+        print(result)
 
     def do_stc_create(self, args):
         """Create a new automation object.

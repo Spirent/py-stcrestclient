@@ -287,18 +287,16 @@ class StcHttp(object):
         *args  -- Zero or more attributes or relationships.
 
         Return:
-        If multiple args:
+        If multiple input arguments are given:
         {attrib_name:attrib_val, attrib_name:attrib_val, ..}
 
-        If single arg:
-        [handle1, handle1, ..]
+        If single input argument is given, then a single string value is
+        returned.  NOTE: If the string contains multiple substrings, then the
+        client will need to parse these.
 
         """
         self._check_session()
         status, data = self._rest.get_request('objects', str(handle), args)
-        if len(args) == 1 and not isinstance(data, (list, tuple)):
-            data = data.split()
-
         return data
 
     def create(self, object_type, under=None, attributes=None):
