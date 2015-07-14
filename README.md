@@ -20,7 +20,7 @@ All code works with Python2.7 and Python3.x.
 
    `sudo pip install stcrestclient`
 
-- Write Python code to talk with TestCenter server
+- Write Python code to talk with TestCenter server:
 
    `python`
    ```python
@@ -30,9 +30,14 @@ All code works with Python2.7 and Python3.x.
    >>> stc.system_info()
    ```
 
-- Interact with TestCenter server
+- Interact with TestCenter server:
 
    `python -m stcrestclient.tccsh`
+   
+- Install [client adapter](https://github.com/Spirent/py-stcrestclient#using-the-stchttp-module#automation-client-rest-api) Adapter for Python automation scripts to use ReST API, without any code change:
+
+   `python -m stcrestclient.adapt`
+   `export STC_REST_API=1`
 
 ## Installation
 
@@ -96,6 +101,9 @@ stc.apply()
 # Run STAK command to archive log files
 stc.perform('spirent.core.ArchiveDiagnosticLogsCommand')
 
+# Wait for sequencer to finish
+stc.wait_until_complete(timeout=30)
+
 # Write a message to the log file
 stc.log('INFO', 'Done with my test')
 
@@ -104,9 +112,10 @@ files_list = stc.files()
 
 # Download and save the diagnostic.tgz file
 file_name = 'diagnostic.tgz'
-file_data = stc.download(file_name)
-with open(file_name, 'w') as save_file:
-    save_file.write(file_data)
+name, size = stc.download(file_name)
+
+# ...Or, download all files
+name_size_dict = stc.download_all()
 
 # Detach from and delete the session
 stc.end_session(end_tcsession=True)
@@ -190,10 +199,27 @@ created: project1
 created: port1
 ```
 
+## Automation Client ReST API Adapter
+
+This package includes a ReST API client adapter module.  The ReST API client adapter is functionally identical to the legacy StcPython.py module, except that it communicates with the STC ReST API.  Without requiring any code changes, this allows STC automation scripts to communicate over ReST, and not need a local STC installation.  This ReST adapter enables ReST API access if the environment variable STC_REST_API is set to a non-empty value.  If STC_REST_API is not set, then the non-rest STC client module is loaded if there is a local STC installation.
+
+### Installing Client Adapter module
+
+To enable existing Python automation scripts to use the STC ReST API, run the adapt script:
+
+```
+python -m stcrestclient.adapt
+```
+
+This installs a new StcPython.py client module, that can load the ReST API adapter or the legacy client module. If there is an existing legacy StcPython.py, as when run from in the STC installation directory, StcPython.py is renamed and will be used if STC_REST_API environment vazriable is not set.  By setting or un-setting STC_REST_API, the same client scripts can choose between using a client STC instance or STC ReST API to communicate with test sessions served by TestCenter server.
+
+Running the adapt script, to install the new StcPython.py module, and then setting STC_REST_API=1, allows existing automation scripts to run on a system where there is no STC installation.  
+
+Nothing about the automation clients needs to change, including connecting to a TestCenter server session.
 
 ## TestCenter system information.
 
-The stcrestclient package includes a module, systeminfo, to retrieve STC and API information from a system running a TestCenter server. This module is provided as a convenient command line tool to get information about a TestCenter server.
+The stcrestclient package includes a module, `systeminfo`, to retrieve STC and API information from a system running a TestCenter server. This module is provided as a convenient command line tool to get information about a TestCenter server.
 
 To get information about a TestCenter server use the following command:
 
