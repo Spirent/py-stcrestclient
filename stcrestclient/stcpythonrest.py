@@ -1,8 +1,14 @@
 """
 ReST API adapter for StcPython.py
 
-Allow Python automation clients to change from using client BLL to STC ReST API
-without having to make any code changes.
+The ReST API client adapter is functionally identical to the legacy
+StcPython.py module, except that it communicates with the STC ReST API.
+Without requiring any code changes, this allows STC automation scripts to
+communicate over ReST, and not need a local STC installation.
+
+This ReST adapter enables ReST API access if the environment variable
+STC_REST_API is set to a non-empty value.  If STC_REST_API is not set, then the
+non-rest STC client module is loaded if there is a local STC installation.
 
 """
 from __future__ import absolute_import
@@ -89,21 +95,7 @@ class StcPythonRest(object):
         return self._stc.log(level, msg)
 
     def perform(self, _cmd, **kwargs):
-        self._check_session()
         cmd = _cmd.lower()
-        if cmd == 'cssynchronizefiles':
-            self._stc.download_all()
-            return
-
-        if cmd == 'cstestsessiondisconnect':
-            kill = False
-            for k in kwargs:
-                if k.lower() == 'terminate':
-                    kill = _is_true(kwargs[k])
-                    break
-            self._end_session(kill)
-            return
-
         if cmd == 'cstestsessionconnect':
             host = None
             new = False
@@ -117,12 +109,29 @@ class StcPythonRest(object):
                     new = _is_true(kwargs[k])
                 elif kl == 'testsessionname':
                     s_name = kwargs[k]
+                elif kl == 'ownerid':
+                    u_name = kwargs[k]
 
             if not new and not s_name:
                 raise ValueError('missing TestSessionName')
 
             self._end_session()
             self._new_session(host, s_name, u_name)
+            return
+
+        if cmd == 'cstestsessiondisconnect':
+            kill = False
+            for k in kwargs:
+                if k.lower() == 'terminate':
+                    kill = _is_true(kwargs[k])
+                    break
+            self._end_session(kill)
+            return
+
+        self._check_session()
+
+        if cmd == 'cssynchronizefiles':
+            self._stc.download_all()
             return
 
         return self._stc.perform(_cmd, kwargs)

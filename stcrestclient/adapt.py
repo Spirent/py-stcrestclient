@@ -1,15 +1,11 @@
 """
-Replace StcPython.py with new module that loads ReST API client adapter module
-or legacy client module.
+Install a new StcPython.py client module to enable use of STC ReST API.
 
-The ReST API client adapter if functionally identical to the legacy
-StcPython.py module, except it communicated using the STC ReST API.  This
-allows STC automation scripts to communicate over ReST, and not need a local
-STC installation, without having to change any code in the automation scripts.
-
-This ReST adapter is used if the environment variable STC_REST_API is set to a
-non-empty value.  If there is an existing legacy StcPython.py, it is renamed
-and will be used if STC_REST_API is not set.
+This script replaces StcPython.py with new module that loads ReST API client
+adapter module or legacy client module, depending on whether or not the
+environment variable STC_REST_API is set to a non-empty value.  If there is an
+existing legacy StcPython.py, it is renamed and will be used if STC_REST_API is
+not set.
 
 """
 from __future__ import absolute_import
