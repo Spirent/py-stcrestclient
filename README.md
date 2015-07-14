@@ -34,7 +34,7 @@ All code works with Python2.7 and Python3.x.
 
    `python -m stcrestclient.tccsh`
    
-- Install [client adapter](https://github.com/Spirent/py-stcrestclient#using-the-stchttp-module#automation-client-rest-api) for Python automation scripts to use ReST API, without any code change:
+- Install [client adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter) for Python automation scripts to use ReST API, without any code change:
 
    `python -m stcrestclient.adapt`
    `export STC_REST_API=1`
