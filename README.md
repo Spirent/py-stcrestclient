@@ -16,9 +16,13 @@ All code works with Python2.7 and Python3.x.
 - License: <http://www.opensource.org/licenses/mit-license.php>
 
 ## Quick Start
+- Get Python pip if not already installed (Download https://bootstrap.pypa.io/get-pip.py):
+
+   `python get-pip.py`
+
 - Install stcrestclient:
 
-   `sudo pip install stcrestclient`
+   `pip install stcrestclient`
 
 - Write Python code to talk with TestCenter server:
 
@@ -43,19 +47,22 @@ All code works with Python2.7 and Python3.x.
 
 ### Install Using pip
 
-Make sure python-pip is installed on you system.  If you are using virtualenv, then pip is already installed into environments created by virtualenv, and using sudo is not needed.  To install the latest, use pip to install from pypi:
+Make sure Python pip is installed on you system.  If you are using virtualenv, then pip is already installed into environments created by virtualenv, and using sudo is not needed.  If you do not have pip installed, download this file:
+<https://bootstrap.pypa.io/get-pip.py> and run `python get-pip.py`.  If installing into your system Python, you will need sufficient privileges for this, as wall as for the commands below. 
 
-    sudo pip install stcrestclient
+To install the latest, use pip to install from pypi:
+
+    pip install stcrestclient
 
 Or, install from the repository archive URL:
 
-    sudo pip install https://github.com/Spirent/py-stcrestclient/archive/master.zip
+    pip install https://github.com/Spirent/py-stcrestclient/archive/master.zip
 
 ### Upgrade with pip
 
 If a newer version of the stcrestclient package is available, you can upgrade your existing version using the same command as you used to install, and adding the --upgrade flag:
 
-    sudo pip install --upgrade stcrestclient
+    pip install --upgrade stcrestclient
 
 ### From Source
 
