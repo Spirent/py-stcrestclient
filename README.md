@@ -20,9 +20,9 @@ All code works with Python2.7 and Python3.x.
 
    `python get-pip.py`
 
-- Install stcrestclient:
+- Install latest stcrestclient:
 
-   `pip install stcrestclient`
+   `pip install -U stcrestclient`
 
 - Write Python code to talk with TestCenter server:
 
@@ -37,7 +37,11 @@ All code works with Python2.7 and Python3.x.
 - Interact with TestCenter server:
 
    `python -m stcrestclient.tccsh`
-   
+
+-Get information about a TestCenter server (and check if it is running):
+
+   `python -m stcrestclient.systeminfo server_addr`
+
 - Install [client adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter) for Python automation scripts to use ReST API, without any code change:
 
    `python -m stcrestclient.adapt`
@@ -50,21 +54,21 @@ All code works with Python2.7 and Python3.x.
 Make sure Python pip is installed on you system.  If you are using virtualenv, then pip is already installed into environments created by virtualenv, and using sudo is not needed.  If you do not have pip installed, download this file:
 <https://bootstrap.pypa.io/get-pip.py> and run `python get-pip.py`.  If installing into your system Python, you will need sufficient privileges for this, as wall as for the commands below. 
 
-To install the latest, use pip to install from pypi:
+To install or upgrade to the latest, use pip to install from pypi:
 
-    pip install stcrestclient
+    pip install -U stcrestclient
 
 Or, install from the repository archive URL:
 
-    pip install https://github.com/Spirent/py-stcrestclient/archive/master.zip
+    pip install -U https://github.com/Spirent/py-stcrestclient/archive/master.zip
 
-### Upgrade with pip
+### Show information about stcrestclient:
 
-If a newer version of the stcrestclient package is available, you can upgrade your existing version using the same command as you used to install, and adding the --upgrade flag:
+If you want to check if the stcrestclient package is installed and see information about the installed package use the following command:
 
-    pip install --upgrade stcrestclient
+    pip show stcrestclient
 
-### From Source
+### Install From Source
 
 The stcrestclient package is installed from source using distutils in the usual way.  Download the [source distribution](https://github.com/Spirent/py-stcrestclient/archive/master.zip) first.  Unzip the zip archive and run the setup.py script to install the package site-wide.  Here are to commands to do that:
 
@@ -72,6 +76,8 @@ The stcrestclient package is installed from source using distutils in the usual 
     unzip py-stcrestclient.zip
     cd py-stcrestclient-*
     sudo python setup.py install
+    
+You can also clone the [repository](https://github.com/Spirent/py-stcrestclient) from GitHub.  Instructions for this not included here.
 
 ## Using the stchttp module
 
