@@ -123,9 +123,8 @@ stc.log('INFO', 'Done with my test')
 # Get a list of available files
 files_list = stc.files()
 
-# Download and save the diagnostic.tgz file
-file_name = 'diagnostic.tgz'
-name, size = stc.download(file_name)
+# Download and save the diagnostics.tgz file
+name, size = stc.download('diagnostics.tgz')
 
 # ...Or, download all files
 name_size_dict = stc.download_all()
