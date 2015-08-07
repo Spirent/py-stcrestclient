@@ -247,7 +247,7 @@ A session can be ended in three ways, depending on the value of the end_tcsessio
 1. end_tcsession=False: End client controller, but leave test session on server.
 1. end_tcsession=True: End client controller and terminate test session (default).
 
-Specifying end_tcsession=False is useful to do before attaching an STC GUI or legacy automation script, to prevent having multiple controllers that may interfere with each other.
+Specifying end_tcsession=False is useful to do before attaching an STC GUI or legacy automation script, to prevent having multiple controllers that may interfere with each other. This requires that the server is running version 2.1.5 or later of the STC ReST API.
 
 When using the interactive shell, tccsh, the equivalent commands are:
 
