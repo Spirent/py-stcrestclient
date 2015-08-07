@@ -152,7 +152,20 @@ class TestCenterCommandShell(cmd.Cmd):
             return
 
     def do_join(self, session):
-        """Join the specified session: join testA - jdoe"""
+        """Join the specified session: join testA - jdoe
+
+        If no test session is specified, then the client stops using the
+        current session.  This does not communicate with the server, and will
+        not end the session on the server.
+        """
+        if not session:
+            if self._joined:
+                self._stc.end_session(None)
+                self._joined = None
+            else:
+                print('specify a session to join')
+            return
+
         if session.endswith(' -') and session.count('-') == 1:
             session += ' '
         if self._not_session(session):
@@ -214,14 +227,32 @@ class TestCenterCommandShell(cmd.Cmd):
         """Exit the SessionManager shell."""
         return True
 
-    def do_end(self, end_tcsession):
-        """End the current session."""
+    def do_end(self, end_tcs):
+        """End the current session: end yes
+
+        An optional 'yes' or 'no' argument specifies whether or not to end the
+        the server's test session (yes), or only end the controller (no).
+        To stop using the current session without affecting the server at all,
+        use the 'join' command without specifying a session.
+
+        If a yes or no argument is not provided, it is prompted for.
+        """
         if self._not_joined():
             return
-        if self.use_rawinput:
-            yn = self._confirm('End test session', self._joined)
-        else:
-            yn = True
+
+        yn = None
+        if end_tcs:
+            if end_tcs == 'yes':
+                yn = True
+            elif end_tcs == 'no':
+                yn = False
+
+        if yn is None:
+            if self.use_rawinput:
+                yn = self._confirm('End test session', self._joined)
+            else:
+                yn = True
+
         try:
             self._stc.end_session(yn)
         except RuntimeError as e:
@@ -524,9 +555,12 @@ class TestCenterCommandShell(cmd.Cmd):
         """
         if self._not_joined():
             return
+        if not chassis:
+            print('missing chassis address, usage: chassis_info 10.100.73.37')
+            return
         try:
             info = self._stc.chassis_info(chassis)
-        except resthttp.RestHttpError as e:
+        except (resthttp.RestHttpError, RuntimeError) as e:
             print('error:', e)
             return
 
@@ -679,6 +713,32 @@ class TestCenterCommandShell(cmd.Cmd):
             print(self._stc.help(subject))
         except resthttp.RestHttpError as e:
             print(e)
+
+    def do_wait_until_complete(self, timeout):
+        """Wait until the sequencer is finished: wait_until_complete 30
+
+        Waits until the STC sequencer has completed its operation, or until the
+        timeout has elapsed.  If no timeout is specified, then waits forever.
+        Waiting can be interrupted with CTRL-C.
+        """
+        if self._not_joined():
+            return
+        try:
+            if timeout:
+                timeout = int(timeout)
+            else:
+                timeout = None
+            self._stc.wait_until_complete(timeout)
+            print('sequencer finished')
+        except KeyboardInterrupt:
+            print('Stopped waiting in wait_until_complete.')
+        except RuntimeError as e:
+            print(e)
+        except Exception as e:
+            print('error:', e)
+        except ValueError:
+            print('timeout must be number of seconds to wait')
+        return
 
     #def do_EOF(self, s):
     #    """Exit the SessionManager shell."""

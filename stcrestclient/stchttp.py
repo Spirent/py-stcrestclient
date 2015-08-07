@@ -78,6 +78,7 @@ class StcHttp(object):
         rest.add_header('X-Spirent-API-Version', str(api_version))
         self._rest = rest
         self._sid = None
+        self._api_ver = None
 
     def session_id(self):
         return self._sid
@@ -143,6 +144,19 @@ class StcHttp(object):
     def end_session(self, end_tcsession=True):
         """End this test session.
 
+        A session can be ended in three ways, depending on the value of the
+        end_tcsession parameter:
+            - end_tcsession=None:
+                Stop using session locally, do not contact server.
+            - end_tcsession=False:
+                End client controller, but leave test session on server.
+            - end_tcsession=True:
+                End client controller and terminate test session (default).
+
+        Specifying end_tcsession=False is useful to do before attaching an STC
+        GUI or legacy automation script, so that there are not multiple
+        controllers to interfere with each other.
+
         When the session is ended, it is no longer available.  Clients should
         export any result or log files, that they want to preserve, before the
         session is ended.
@@ -154,23 +168,32 @@ class StcHttp(object):
         if not self.started():
             return False
 
-        if self._dbg_print:
-            print('===> deleting session:', self._sid)
-
         sid = self._sid
         self._sid = None
-        if end_tcsession:
+
+        if end_tcsession is not None:
+            if self._dbg_print:
+                print('===> deleting session:', self._sid)
+
             try:
-                status, data = self._rest.delete_request('sessions', sid)
-                if self._dbg_print:
-                    print('===> OK - deleted session on server')
+                if end_tcsession:
+                    status, data = self._rest.delete_request('sessions', sid)
+                    time.sleep(7)
+                    if self._dbg_print:
+                        print('===> deleted test session on server')
+                else:
+                    # Ending client session is supported on version >= 2.1.5
+                    if self._get_api_version() >= (2, 1, 5):
+                        status, data = self._rest.delete_request(
+                            'sessions', sid, 'false')
+                        if self._dbg_print:
+                            print('===> deleted client session')
             except resthttp.RestHttpError as e:
                 raise RuntimeError('failed to end session: ' + str(e))
-            time.sleep(7)
 
         self._rest.del_header('X-STC-API-Session')
         if self._dbg_print:
-            print('===> OK - ended client session')
+            print('===> OK - detached from session')
         return True
 
     def debug_print(self):
@@ -383,6 +406,8 @@ class StcHttp(object):
 
     def chassis_info(self, chassis):
         """Get information about the specified chassis."""
+        if not chassis or not isinstance(chassis, str):
+            raise RuntimeError('missing chassis address')
         self._check_session()
         status, data = self._rest.get_request('chassis', chassis)
         return data
@@ -485,7 +510,7 @@ class StcHttp(object):
         """Write a diagnostic message to a log file or to standard output.
 
         Arguments:
-        level -- Severity level ofentry.  One of: INFO, WARN, ERROR, FATAL.
+        level -- Severity level of entry.  One of: INFO, WARN, ERROR, FATAL.
         msg   -- Message to write to log.
 
         """
@@ -535,7 +560,7 @@ class StcHttp(object):
 
         Arguments:
         timeout -- Optional.  Seconds to wait for sequencer to finish.  If this
-                   time is exceeded, then exception is raised.
+                   time is exceeded, then an exception is raised.
 
         Return:
         Sequencer testState value.
@@ -560,3 +585,22 @@ class StcHttp(object):
     def _check_session(self):
         if not self.started():
             raise RuntimeError('must first join session')
+
+    def _get_api_version(self):
+        if not self._api_ver:
+            try:
+                status, data = self._rest.get_request('system')
+                v = data.get('stcapi_version')
+                if v and v.count('.') == 2:
+                    # Normalize a version string for comparison.
+                    self._api_ver = tuple(map(int, v.split('.')))
+                    if self._dbg_print:
+                        print('===> stcapi version:', v)
+                else:
+                    raise RuntimeError('failed to get stcapi_version')
+            except Exception as e:
+                if self._dbg_print:
+                    print('===>', e)
+                return (0, 0, 0)
+
+        return self._api_ver

@@ -236,13 +236,19 @@ class RestHttp(object):
 
         return self._handle_response(rsp)
 
-    def delete_request(self, container, resource=None, accept=None):
+    def delete_request(self, container, resource=None, query_items=None,
+                       accept=None):
         """Send a DELETE request."""
         url = self.make_url(container, resource)
         headers = self._make_headers(accept)
 
+        if query_items and isinstance(query_items, (list, tuple, set)):
+            url += RestHttp._list_query_str(query_items)
+            query_items = None
+
         try:
-            rsp = requests.delete(url, headers=headers, verify=self._verify)
+            rsp = requests.delete(url, params=query_items, headers=headers,
+                                  verify=self._verify)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 

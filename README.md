@@ -177,15 +177,17 @@ Once started and connected to a server, you will see a prompt that contains the 
 
 Type help to see help info on the available commands.  This displays the help menu:
 
-    Documented commands (type help <topic>):
-    ========================================
-    chassis       download      is_connected   stc_apply       stc_disconnectall
-    chassis_info  download_all  join           stc_config      stc_get
-    connections   end           ls             stc_connect     stc_help
-    debug_off     exit          new            stc_connectall  stc_log
-    debug_on      files         recording_off  stc_create      stc_perform
-    delete        help          recording_on   stc_delete      system_info
-    delete_all    info          server         stc_disconnect  upload
+	Documented commands (type help <topic>):
+	========================================
+	chassis       end           recording_off   stc_disconnect
+	chassis_info  exit          recording_on    stc_disconnectall
+	connections   files         server          stc_get
+	debug_off     help          stc_apply       stc_help
+	debug_on      info          stc_config      stc_log
+	delete        is_connected  stc_connect     stc_perform
+	delete_all    join          stc_connectall  system_info
+	download      ls            stc_create      upload
+	download_all  new           stc_delete      wait_until_complete
 
 To see help for a command, type "help" followed by the command name.  For example, type `help ls` to see help on the `ls` command.
 
