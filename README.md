@@ -239,6 +239,21 @@ To get information about a TestCenter server use the following command:
 
    `python -m stcrestclient.systeminfo server_addr`
 
+## Ending a Session
+
+A session can be ended in three ways, depending on the value of the end_tcsession parameter of the StcHttp.end_session() method:
+
+1. end_tcsession=None: Stop using session locally, do not contact the server.
+1. end_tcsession=False: End client controller, but leave test session on server.
+1. end_tcsession=True: End client controller and terminate test session (default).
+
+Specifying end_tcsession=False is useful to do before attaching an STC GUI or legacy automation script, to prevent having multiple controllers that may interfere with each other.
+
+When using the interactive shell, tccsh, the equivalent commands are:
+
+1. Invoke `join` with no argument
+1. Invoke `end` and specify "no"
+1. Invoke `end` and specify "yes"
 
 ## Requirements
 
