@@ -38,7 +38,7 @@ All code works with Python2.7 and Python3.x.
 
    `python -m stcrestclient.tccsh`
 
--Get information about a TestCenter server (and check if it is running):
+- Get information about a TestCenter server (and check if it is running):
 
    `python -m stcrestclient.systeminfo server_addr`
 
