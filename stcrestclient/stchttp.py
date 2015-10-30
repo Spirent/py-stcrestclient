@@ -549,7 +549,8 @@ class StcHttp(object):
     def upload(self, src_file_path, dst_file_name=None):
         """Upload the specified file to the server."""
         self._check_session()
-        status, data = self._rest.upload('files', src_file_path, dst_file_name)
+        status, data = self._rest.upload_file(
+            'files', src_file_path, dst_file_name)
         return data
 
     def wait_until_complete(self, timeout=None):
