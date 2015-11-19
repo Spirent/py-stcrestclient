@@ -504,6 +504,9 @@ class StcHttp(object):
             status, data = self._rest.get_request('help')
         else:
             status, data = self._rest.get_request('help', subject)
+
+        if isinstance(data, (list, tuple, set)):
+            return ' '.join((str(i) for i in data))
         return data['message']
 
     def log(self, level, msg):

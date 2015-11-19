@@ -175,7 +175,6 @@ class TestCenterCommandShell(cmd.Cmd):
         except Exception as e:
             print(e)
             return
-        bll_ver = self._stc.join_session(session)
         self._joined = session
         print('Joined session "%s" (BLL ver: %s)' % (session, bll_ver))
 
