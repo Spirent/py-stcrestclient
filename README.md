@@ -255,6 +255,30 @@ When using the interactive shell, tccsh, the equivalent commands are:
 1. Invoke `end` and specify "no"
 1. Invoke `end` and specify "yes"
 
+## Automation API to ReST API Quick Reference
+
+| Automation API           | ReST API Equivalent                                    |
+| ------------------------ | :----------------------------------------------------- |
+| ::stc::apply	           | PUT http://host.domain/stcapi/apply                    |
+| ::stc::config	           | PUT http://host.domain/stcapi/objects/{object}         |
+| ::stc::connect           | PUT http://host.domain/stcapi/connections/{chassis}    |
+| ::stc::create            | POST http://host.domain/stcapi/objects/                |
+| ::stc::delete            | DELETE http://host.domain/stcapi/objects/{handle}      |
+| ::stc::disconnect        | DELETE http://host.domain/stcapi/connections/{chassis} |
+| ::stc::get               | GET http://host.domain/stcapi/objects/{object}         |
+| ::stc::help              | GET http://host.domain/stcapi/help/{help_subject}      |
+| ::stc::help list         | GET http://host.domain/stcapi/help/list?{search_info}  |
+| ::stc::log               | PUT http://host.domain/stcapi/system/log/              |
+| ::stc::perform           | PUT http://host.domain/stcapi/perform/{command_name}   |
+| ::stc::release           | Supported using perform                                |
+| ::stc::reserve           | Supported using perform                                |
+| ::stc::sleep             | NOT SUPPORTED -- client must implement                 |
+| ::stc::subscribe         | Supported using perform                                |
+| ::stc::unsubscribe       | Supported using perform                                |
+| ::stc::waitUntilComplete | NOT SUPPORTED -- client must implement                 |
+
+Note: The STC ReST API supports additional methods, not specified in this table, that perform common STC automation tasks.  For example, the REST API provides methods for connecting or disconnecting multiple or all chassis using a POST request.
+
 ## Requirements
 
 - Python2.7 or Python3.x
