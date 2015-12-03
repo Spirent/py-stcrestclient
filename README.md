@@ -133,7 +133,7 @@ name_size_dict = stc.download_all()
 stc.end_session(end_tcsession=True)
 ```
 
-For example usage, look in the [examples] directory(https://github.com/Spirent/py-stcrestclient/tree/master/examples) for Python code examples.  The examples, like the client lib, will run with either Python2.7 or Python3.x.
+For example usage, look in the [examples](https://github.com/Spirent/py-stcrestclient/tree/master/examples) directory for Python code examples.  The examples, like the client lib, will run with either Python2.7 or Python3.x.
 
 ## Using the ReST API Command line Shell: tccsh
 
