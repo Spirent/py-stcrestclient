@@ -14,6 +14,7 @@ All code works with Python2.7 and Python3.x.
 - Package download: <http://pypi.python.org/pypi/stcrestclient>
 - Documentation: See *Spirent TestCenter Automation Programmer's Reference*
 - License: <http://www.opensource.org/licenses/mit-license.php>
+- Automation to ReST API: [Quick Reference](https://github.com/Spirent/py-stcrestclient/blob/master/README.md#automation-api-to-rest-api-quick-reference)
 
 ## Quick Start
 - Get Python pip if not already installed (Download https://bootstrap.pypa.io/get-pip.py):
@@ -255,21 +256,25 @@ When using the interactive shell, tccsh, the equivalent commands are:
 1. Invoke `end` and specify "no"
 1. Invoke `end` and specify "yes"
 
+## Requirements
+
+- [Python2.7 or Python3.x](https://www.python.org/downloads/)
+
 ## Automation API to ReST API Quick Reference
 
 | Automation API           | ReST API Equivalent                                    |
 | ------------------------ | :----------------------------------------------------- |
-| ::stc::apply	           | PUT http://host.domain/stcapi/apply                    |
-| ::stc::config	           | PUT http://host.domain/stcapi/objects/{object}         |
-| ::stc::connect           | PUT http://host.domain/stcapi/connections/{chassis}    |
-| ::stc::create            | POST http://host.domain/stcapi/objects/                |
-| ::stc::delete            | DELETE http://host.domain/stcapi/objects/{handle}      |
-| ::stc::disconnect        | DELETE http://host.domain/stcapi/connections/{chassis} |
-| ::stc::get               | GET http://host.domain/stcapi/objects/{object}         |
-| ::stc::help              | GET http://host.domain/stcapi/help/{help_subject}      |
-| ::stc::help list         | GET http://host.domain/stcapi/help/list?{search_info}  |
-| ::stc::log               | PUT http://host.domain/stcapi/system/log/              |
-| ::stc::perform           | PUT http://host.domain/stcapi/perform/{command_name}   |
+| ::stc::apply	           | PUT http://<i></i>host.domain/stcapi/apply                    |
+| ::stc::config	           | PUT http://<i></i>host.domain/stcapi/objects/{object}         |
+| ::stc::connect           | PUT http://<i></i>host.domain/stcapi/connections/{chassis}    |
+| ::stc::create            | POST http://<i></i>host.domain/stcapi/objects/                |
+| ::stc::delete            | DELETE http://<i></i>host.domain/stcapi/objects/{handle}      |
+| ::stc::disconnect        | DELETE http://<i></i>host.domain/stcapi/connections/{chassis} |
+| ::stc::get               | GET http://<i></i>host.domain/stcapi/objects/{object}         |
+| ::stc::help              | GET http://<i></i>host.domain/stcapi/help/{help_subject}      |
+| ::stc::help list         | GET http://<i></i>host.domain/stcapi/help/list?{search_info}  |
+| ::stc::log               | PUT http://<i></i>host.domain/stcapi/system/log/              |
+| ::stc::perform           | PUT http://<i></i>host.domain/stcapi/perform/{command_name}   |
 | ::stc::release           | Supported using perform                                |
 | ::stc::reserve           | Supported using perform                                |
 | ::stc::sleep             | NOT SUPPORTED -- client must implement                 |
@@ -278,7 +283,3 @@ When using the interactive shell, tccsh, the equivalent commands are:
 | ::stc::waitUntilComplete | NOT SUPPORTED -- client must implement                 |
 
 Note: The STC ReST API supports additional methods, not specified in this table, that perform common STC automation tasks.  For example, the REST API provides methods for connecting or disconnecting multiple or all chassis using a POST request.
-
-## Requirements
-
-- Python2.7 or Python3.x
