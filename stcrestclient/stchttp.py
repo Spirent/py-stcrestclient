@@ -91,6 +91,13 @@ class StcHttp(object):
         session_name parameters.  If a session name is not specified, then the
         server will create one.
 
+        Arguments:
+        user_name     -- User name part of session ID.
+        session_name  -- Session name part of session ID.
+        kill_existing -- If there is an existing session, with the same session
+                         name and user name, then terminate it before creating
+                         a new session
+
         Return:
         True is session started, False if session was already started.
 
@@ -483,7 +490,7 @@ class StcHttp(object):
         self._rest.post_request('connections', None,
                                 {'action': 'disconnectall'})
 
-    def help(self, subject=None):
+    def help(self, subject=None, args=None):
         """Get help information about Automation API.
 
         The following values can be specified for the subject:
@@ -495,15 +502,22 @@ class StcHttp(object):
 
         Arguments:
         subject -- Optional.  Subject to get help on.
+        args    -- Optional.  Additional arguments for searching help.  These
+                   are used when the subject is 'list'.
 
         Return:
         String of help information.
 
         """
-        if not subject:
-            status, data = self._rest.get_request('help')
+        if subject:
+            if subject not in (
+                'commands', 'create', 'config', 'get', 'delete', 'perform',
+                'connect', 'connectall', 'disconnect', 'disconnectall',
+                'apply', 'log', 'help'):
+                self._check_session()
+            status, data = self._rest.get_request('help', subject, args)
         else:
-            status, data = self._rest.get_request('help', subject)
+            status, data = self._rest.get_request('help')
 
         if isinstance(data, (list, tuple, set)):
             return ' '.join((str(i) for i in data))

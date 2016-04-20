@@ -18,6 +18,7 @@ import socket
 import cmd
 import shlex
 import time
+import getpass
 
 try:
     from . import stchttp
@@ -124,13 +125,20 @@ class TestCenterCommandShell(cmd.Cmd):
             # End the current session, without deleting TC session.
             self._stc.end_session(False)
             self._joined = None
-        user_name = 'anonymous'
+        user_name = ''
         session_name = None
         params = s.split()
         if params:
             user_name = params.pop(0)
-        if params:
-            session_name = params.pop(0)
+            if params:
+                session_name = params.pop(0)
+        else:
+            try:
+                # Try to get the name of the current user.
+                user_name = getpass.getuser()
+            except:
+                pass
+
         try:
             sid = self._stc.new_session(user_name, session_name)
         except Exception as e:
@@ -698,7 +706,7 @@ class TestCenterCommandShell(cmd.Cmd):
         print('logged', level, 'message:', msg)
 
     def do_stc_help(self, subject):
-        """Get help information about Automation API: help subject
+        """Get help information about Automation API: help subject args
 
         The following values can be specified for the subject:
             <empty>        -- gets an overview of help.
@@ -706,11 +714,26 @@ class TestCenterCommandShell(cmd.Cmd):
             <command name> -- get info about the specified command.
             <object type>  -- get info about the specified object type
             <handle value> -- get info about the object type referred to
+            list commands [wildcard]    -- get info about STC commands
+            list configTypes [wildcard] -- get info about STC config types
+
+        List examples:
+            stc_help list commands wait*
+            stc_help list commands spirent.methodology.*
 
         """
+        help_args = None
+        if subject:
+            help_args = subject.split()
+            subject = help_args.pop(0)
+
         try:
-            print(self._stc.help(subject))
+            print(self._stc.help(subject, help_args))
         except resthttp.RestHttpError as e:
+            print(e)
+        except RuntimeError as e:
+            if self._not_joined():
+                return
             print(e)
 
     def do_wait_until_complete(self, timeout):
