@@ -17,6 +17,7 @@ from __future__ import print_function
 import os
 import time
 import atexit
+import getpass
 
 try:
     from . import stchttp
@@ -116,7 +117,7 @@ class StcPythonRest(object):
                 raise ValueError('missing TestSessionName')
 
             self._end_session()
-            self._new_session(host, s_name, u_name)
+            self.new_session(host, s_name, u_name)
             return
 
         if cmd == 'cstestsessiondisconnect':
@@ -167,13 +168,28 @@ class StcPythonRest(object):
         self._stc.perform('ResultDataSetUnsubscribe',
                           {'ResultDataSet': rdsHandle})
 
-    def _check_session(self):
-        """Start a new session if one is not already started."""
-        if not self._stc:
-            self._new_session()
+    def new_session(self, server=None, session_name=None, user_name=None,
+                    kill_existing=False):
+        """Create a new session or attach to existing.
 
-    def _new_session(self, server=None, session_name=None, user_name=None):
-        """Create a new session or attach to existing."""
+        Normally, this function is called automatically, and gets its parameter
+        values from the environment.  It is provided as a public function for
+        cases when extra control over session creation is required in an
+        automation script that is adapted to use ReST.
+
+        WARNING:  This function is not part of the original StcPython.py and if
+        called directly by an automation script, then that script will not be
+        able to revert to using the non-ReST API until the call to this
+        function is removed.
+
+        See also: stchttp.StcHttp(), stchttp.new_session()
+
+        Return:
+        The internal StcHttp object that is used for this session.  This allows
+        the caller to perform additional interactions with the STC ReST API
+        beyond what the adapter provides.
+
+        """
         if not server:
             server = os.environ.get('STC_SERVER_ADDRESS')
             if not server:
@@ -183,7 +199,19 @@ class StcPythonRest(object):
             session_name = os.environ.get('STC_SESSION_NAME')
             if not session_name or session_name == '__NEW_TEST_SESSION__':
                 session_name = None
-        self._stc.new_session(user_name, session_name)
+        if not user_name:
+            try:
+                # Try to get the name of the current user.
+                user_name = getpass.getuser()
+            except:
+                pass
+        self._stc.new_session(user_name, session_name, kill_existing)
+        return self._stc
+
+    def _check_session(self):
+        """Start a new session if one is not already started."""
+        if not self._stc:
+            self.new_session()
 
     def _end_session(self, kill=None):
         """End the client session."""
