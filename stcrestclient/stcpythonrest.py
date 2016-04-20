@@ -135,6 +135,21 @@ class StcPythonRest(object):
             self._stc.download_all()
             return
 
+        upload_arg = None
+        if cmd == 'loadfromdatabase':
+            upload_arg = 'databaseconnectionstring'
+        elif cmd == 'loadfromxml':
+            upload_arg = 'filename'
+
+        if upload_arg:
+            for k in kwargs:
+                kl = k.lower()
+                if kl == upload_arg:
+                    up_info = self._stc.upload(kwargs[k])
+                    # Replace the upload path with the uploaded name.
+                    kwargs[k] = up_info['name']
+                    break
+
         return self._stc.perform(_cmd, kwargs)
 
     def sleep(self, seconds):
