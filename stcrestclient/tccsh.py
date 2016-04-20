@@ -35,7 +35,6 @@ class TestCenterCommandShell(cmd.Cmd):
 
     intro = 'Welcome to Spirent TestCenter Command Shell (tccsh)'
     _stc = None
-    _joined = None
     _sessions = []
     _server = None
     _port = None
@@ -52,8 +51,8 @@ class TestCenterCommandShell(cmd.Cmd):
             self.prompt = ''
             return stop
 
-        if self._joined:
-            self.prompt = '%s:%s> ' % (self._server, self._joined)
+        if self._stc.session_id():
+            self.prompt = '%s:%s> ' % (self._server, self._stc.session_id())
         else:
             self.prompt = '%s:> ' % (self._server,)
 
@@ -70,10 +69,11 @@ class TestCenterCommandShell(cmd.Cmd):
         """
         self._update_sessions()
         info = (s == '-l')
+        current = self._stc.session_id()
         for session in self._sessions:
             if info:
                 self.do_info(session)
-            elif session == self._joined:
+            elif session == current:
                 print('[%s] <-- current session' % (session,))
             else:
                 print(session)
@@ -81,7 +81,7 @@ class TestCenterCommandShell(cmd.Cmd):
     def do_info(self, session):
         """Show information about the specified session: info testA - jdoe"""
         if not session:
-            session = self._joined
+            session = self._stc.session_id()
             if not session:
                 print('no session specified')
                 return
@@ -102,7 +102,7 @@ class TestCenterCommandShell(cmd.Cmd):
         if self._not_session(session):
             return
         try:
-            if session != self._joined:
+            if session != self._stc.session_id():
                 self._stc.join_session(session)
             self._stc.end_session()
         except RuntimeError as e:
@@ -114,17 +114,17 @@ class TestCenterCommandShell(cmd.Cmd):
     def do_delete_all(self, s):
         """Delete all sessions from server."""
         self._update_sessions()
+        current = self._stc.session_id()
         for session in self._sessions:
-            if session != self._joined:
+            if session != current:
                 print('Deleting session:', session)
                 self.do_delete(session)
 
     def do_new(self, s):
         """Create a new session: new user_name session_name"""
-        if self._joined is not None:
+        if self._stc.session_id():
             # End the current session, without deleting TC session.
             self._stc.end_session(False)
-            self._joined = None
         user_name = ''
         session_name = None
         params = s.split()
@@ -145,7 +145,6 @@ class TestCenterCommandShell(cmd.Cmd):
             print(e)
             return
         self._update_sessions()
-        self._joined = sid
         print('Created and joined session:', sid)
 
     def do_files(self, s):
@@ -167,9 +166,8 @@ class TestCenterCommandShell(cmd.Cmd):
         not end the session on the server.
         """
         if not session:
-            if self._joined:
+            if self._stc.session_id():
                 self._stc.end_session(None)
-                self._joined = None
             else:
                 print('specify a session to join')
             return
@@ -183,7 +181,7 @@ class TestCenterCommandShell(cmd.Cmd):
         except Exception as e:
             print(e)
             return
-        self._joined = session
+
         print('Joined session "%s" (BLL ver: %s)' % (session, bll_ver))
 
     def complete_join(self, text, line, begidx, endidx):
@@ -247,6 +245,7 @@ class TestCenterCommandShell(cmd.Cmd):
         if self._not_joined():
             return
 
+        current = self._stc.session_id()
         yn = None
         if end_tcs:
             if end_tcs == 'yes':
@@ -256,7 +255,7 @@ class TestCenterCommandShell(cmd.Cmd):
 
         if yn is None:
             if self.use_rawinput:
-                yn = self._confirm('End test session', self._joined)
+                yn = self._confirm('End test session', current)
             else:
                 yn = True
 
@@ -265,10 +264,9 @@ class TestCenterCommandShell(cmd.Cmd):
         except RuntimeError as e:
             print(e)
         if yn:
-            print('Terminated test session', self._joined)
+            print('Terminated test session', current)
         else:
-            print('Detached from test session', self._joined)
-        self._joined = None
+            print('Detached from test session', current)
 
     def do_server(self, server):
         """Specify STC server.
@@ -304,7 +302,6 @@ class TestCenterCommandShell(cmd.Cmd):
             return
 
         self._server = server
-        self._joined = None
         self._sessions = []
 
     def do_upload(self, file_path):
@@ -798,7 +795,7 @@ class TestCenterCommandShell(cmd.Cmd):
         return confirmed
 
     def _not_joined(self):
-        if self._joined is None:
+        if not self._stc.session_id():
             print('you must first join a session')
             return True
         return False
