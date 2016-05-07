@@ -259,6 +259,9 @@ class TestCenterCommandShell(cmd.Cmd):
             else:
                 yn = True
 
+        if yn:
+            print('...waiting for session to end...')
+
         try:
             self._stc.end_session(yn)
         except RuntimeError as e:
