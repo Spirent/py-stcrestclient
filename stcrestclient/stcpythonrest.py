@@ -136,10 +136,14 @@ class StcPythonRest(object):
             return
 
         upload_arg = None
-        if cmd == 'loadfromdatabase':
+        if cmd in ('loadfromdatabase', 'queryresult'):
             upload_arg = 'databaseconnectionstring'
-        elif cmd == 'loadfromxml':
+        elif cmd in ('loadfromxml', 'loadfilterfromlibrary',
+                     'licensedownloadfile', 'downloadfile',
+                     'ManualScheduleLoadFromTemplate'):
             upload_arg = 'filename'
+        elif cmd == 'pppuploadauthenticationfile':
+            upload_arg = 'authenticationfilepath'
 
         if upload_arg:
             for k in kwargs:
@@ -326,13 +330,13 @@ class StcPythonRest(object):
 
     @staticmethod
     def _unpack_args(*args):
-         svec = []
-         for arg in args:
+        svec = []
+        for arg in args:
             if isinstance(arg, (list, tuple)):
                 svec.extend(arg)
             else:
                 svec.append(arg)
-         return svec
+        return svec
 
 
 def _is_true(val):
