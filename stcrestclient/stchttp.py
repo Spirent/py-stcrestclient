@@ -14,6 +14,7 @@ from __future__ import print_function
 import time
 import os
 import socket
+import sys
 
 try:
     from . import resthttp
@@ -185,7 +186,16 @@ class StcHttp(object):
             try:
                 if end_tcsession:
                     status, data = self._rest.delete_request('sessions', sid)
-                    time.sleep(7)
+                    print('waiting for session to end..', end='')
+                    sys.stdout.flush()
+                    while True:
+                        time.sleep(5)
+                        ses_list = self.sessions()
+                        if not ses_list or sid not in ses_list:
+                            break
+                        print('.', end='')
+                        sys.stdout.flush()
+                    print()
                     if self._dbg_print:
                         print('===> deleted test session on server')
                 else:
