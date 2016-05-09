@@ -130,6 +130,12 @@ name, size = stc.download('diagnostics.tgz')
 # ...Or, download all files
 name_size_dict = stc.download_all()
 
+# Upload config file
+stc.upload(config.xml')
+
+# Load STC config from file
+stc.perform('LoadFromXml', filename='config.xml')
+
 # Detach from and delete the session
 stc.end_session(end_tcsession=True)
 ```
