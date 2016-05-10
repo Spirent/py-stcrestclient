@@ -286,6 +286,6 @@ When using the interactive shell, tccsh, the equivalent commands are:
 | ::stc::sleep             | NOT SUPPORTED -- client must implement                 |
 | ::stc::subscribe         | Supported using perform                                |
 | ::stc::unsubscribe       | Supported using perform                                |
-| ::stc::waitUntilComplete | NOT SUPPORTED -- client must implement                 |
+| ::stc::waitUntilComplete | Implemented in client by polling sequencer state              |
 
 Note: The STC ReST API supports additional methods, not specified in this table, that perform common STC automation tasks.  For example, the REST API provides methods for connecting or disconnecting multiple or all chassis using a POST request.
