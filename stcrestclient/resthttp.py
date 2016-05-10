@@ -202,8 +202,7 @@ class RestHttp(object):
 
         return self._handle_response(rsp, to_lower)
 
-    def post_request(self, container, resource=None, params=None,
-                     accept=None):
+    def post_request(self, container, resource=None, params=None, accept=None):
         """Send a POST request."""
         url = self.make_url(container, resource)
         headers = self._make_headers(accept)
@@ -219,8 +218,7 @@ class RestHttp(object):
 
         return self._handle_response(rsp)
 
-    def put_request(self, container, resource=None, params=None,
-                    accept=None):
+    def put_request(self, container, resource=None, params=None, accept=None):
         """Send a PUT request."""
         url = self.make_url(container, resource)
         headers = self._make_headers(accept)
@@ -257,8 +255,8 @@ class RestHttp(object):
 
         return self._handle_response(rsp)
 
-    def download_file(self, container, resource, save_path=None,
-                      accept=None, query_items=None):
+    def download_file(self, container, resource, save_path=None, accept=None,
+                      query_items=None):
         """Download a file."""
         url = self.make_url(container, resource)
         if not save_path:

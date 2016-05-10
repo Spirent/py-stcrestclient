@@ -449,11 +449,16 @@ class TestCenterCommandShell(cmd.Cmd):
     def do_stc_create(self, args):
         """Create a new automation object.
 
+        Attributes are specified as name=value.  If an attribute is assigned a
+        list of values, then the list of values must be quoted with each value
+        separated by a space: name="value1 value2 value3"
+
         Synopsis:
-            stc_create object_type [under] [attribute, ..]
+            stc_create object_type [under] [attribute=value, ..]
 
         Example:
             stc_create port project1
+            stc_create port project1 location=//10.1.2.3/1/1
 
         """
         if self._not_joined():
@@ -474,11 +479,16 @@ class TestCenterCommandShell(cmd.Cmd):
     def do_stc_perform(self, args):
         """Perform a command.
 
+        Parameters are specified as name=value.  If a parameter is assigned a
+        list of values, then the list of values must be quoted with each value
+        separated by a space: name="value1 value2 value3"
+
         Synopsis:
             stc_perform command [param=value, ...]
 
         Example:
             stc_perform SaveAsXml config=project1 filename=mytest.xml
+            stc_perform AttachPorts portList="port1 port2 port3"
 
         """
         if self._not_joined():
@@ -496,6 +506,10 @@ class TestCenterCommandShell(cmd.Cmd):
 
     def do_stc_config(self, args):
         """Sets or modifies one or more object attributes or relations.
+
+        Attributes are specified as name=value.  If an attribute is assigned a
+        list of values, then the list of values must be quoted with each value
+        separated by a space: name="value1 value2 value3"
 
         Synopsis:
             stc_config handle [name=value, ...]
@@ -814,6 +828,8 @@ class TestCenterCommandShell(cmd.Cmd):
         for arg in args:
             if '=' in arg:
                 k, v = arg.split('=', 1)
+                if ' ' in v:
+                    v = shlex.split(v)
                 params[k] = v
             else:
                 params[arg] = None
