@@ -335,28 +335,30 @@ class StcHttp(object):
         status, data = self._rest.get_request('objects', str(handle), args)
         return data
 
-    def create(self, object_type, under=None, attributes=None):
+    def create(self, object_type, under=None, attributes=None, **kwattrs):
         """Create a new automation object.
 
         Arguments:
         object_type -- Type of object to create.
         under       -- Handle of the parent of the new object.
         attributes  -- Dictionary of attributes (name-value pairs).
+        kwattrs     -- Optional keyword attributes (name=value pairs).
 
         Return:
         Handle of newly created object.
 
         """
-        data = self.createx(object_type, under, attributes)
+        data = self.createx(object_type, under, attributes, **kwattrs)
         return data['handle']
 
-    def createx(self, object_type, under=None, attributes=None):
+    def createx(self, object_type, under=None, attributes=None, **kwattrs):
         """Create a new automation object.
 
         Arguments:
         object_type -- Type of object to create.
         under       -- Handle of the parent of the new object.
         attributes  -- Dictionary of attributes (name-value pairs).
+        kwattrs     -- Optional keyword attributes (name=value pairs).
 
         Return:
         Dictionary containing handle of newly created object.
@@ -368,6 +370,8 @@ class StcHttp(object):
             params['under'] = under
         if attributes:
             params.update(attributes)
+        if kwattrs:
+            params.update(kwattrs)
 
         status, data = self._rest.post_request('objects', None, params)
         return data
@@ -393,7 +397,7 @@ class StcHttp(object):
         Arguments:
         command -- Command to execute.
         params  -- Optional.  Dictionary of parameters (name-value pairs).
-        kwargs  -- OPtional keyword arguments (name-value pairs).
+        kwargs  -- Optional keyword arguments (name=value pairs).
 
         Return:
         Data from command.
@@ -408,15 +412,21 @@ class StcHttp(object):
         status, data = self._rest.post_request('perform', None, params)
         return data
 
-    def config(self, handle, attributes=None):
+    def config(self, handle, attributes=None, **kwattrs):
         """Sets or modifies one or more object attributes or relations.
 
         Arguments:
         handle     -- Handle of object to modify.
         attributes -- Dictionary of attributes (name-value pairs).
+        kwattrs    -- Optional keyword attributes (name=value pairs).
 
         """
         self._check_session()
+        if kwattrs:
+            if attributes:
+                attributes.update(kwattrs)
+            else:
+                attributes = kwattrs
         self._rest.put_request('objects', str(handle), attributes)
 
     def chassis(self):
