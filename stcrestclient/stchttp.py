@@ -23,8 +23,6 @@ except ValueError:
 # Use this port if it is not specified when creating StcHttp, or by the
 # STC_SERVER_PORT environment variable.
 DEFAULT_PORT = 80
-# Use this port if port not specified and default port does not work.
-ALT_PORT = 8888
 
 
 class StcHttp(object):
@@ -40,7 +38,7 @@ class StcHttp(object):
 
         If the port to connect to is not specified by the port argument, or by
         the STC_SERVER_PORT environment variable, then try connecting on the
-        DEFAULT_PORT and then the ALT_PORT.
+        DEFAULT_PORT.
 
         Arguments:
         server      -- STC REST API server to connect to. None to use environ.
@@ -54,26 +52,20 @@ class StcHttp(object):
             server = os.environ.get('STC_SERVER_ADDRESS')
             if not server:
                 raise RuntimeError('STC_SERVER_ADDRESS not set')
-        if port:
-            try_ports = [port]
-        else:
-            port = os.environ.get('STC_SERVER_PORT')
-            try_ports = [port] if port else [DEFAULT_PORT, ALT_PORT]
+        if not port:
+            port = os.environ.get('STC_SERVER_PORT', DEFAULT_PORT)
 
         self._dbg_print = bool(debug_print)
         rest = None
-        while try_ports:
-            port = try_ports.pop(0)
-            url = resthttp.RestHttp.url('http', server, port, 'stcapi')
-            rest = resthttp.RestHttp(url, debug_print=debug_print)
-            try:
-                rest.get_request('sessions')
-                break
-            except (socket.error, resthttp.ConnectionError,
-                    resthttp.RestHttpError):
-                if not try_ports:
-                    raise RuntimeError('Cannot connect to STC server: %s:%s' %
-                                       (server, port))
+
+        url = resthttp.RestHttp.url('http', server, port, 'stcapi')
+        rest = resthttp.RestHttp(url, debug_print=debug_print)
+        try:
+            rest.get_request('sessions')
+        except (socket.error, resthttp.ConnectionError,
+                resthttp.RestHttpError):
+            raise RuntimeError('Cannot connect to STC server: %s:%s' %
+                               (server, port))
 
         rest.add_header('X-Spirent-API-Version', str(api_version))
         self._rest = rest
@@ -414,6 +406,11 @@ class StcHttp(object):
 
     def config(self, handle, attributes=None, **kwattrs):
         """Sets or modifies one or more object attributes or relations.
+
+        Arguments can be supplied either as a dictionary or as keyword
+        arguments.  Examples:
+            stc.config('port1', location='//10.1.2.3/1/1')
+            stc.config('port2', {'location': '//10.1.2.3/1/2'})
 
         Arguments:
         handle     -- Handle of object to modify.

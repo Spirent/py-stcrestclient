@@ -88,7 +88,7 @@ To use the STC ReST client library, import the `stchttp.py` module, create a new
 from stcrestclient import stchttp
 stc = stchttp.StcHttp('stcserver.somewhere.com')
 
-# Create new session
+# Create and join new session
 sid = stc.new_session('JoeUser', 'ExampleTest')
 
 # Get system information
@@ -103,7 +103,8 @@ port_handle = stc.create('port', project)
 # Connect to a chassis
 stc.connect('172.16.23.54')
 
-# Configure port location
+# Configure port location (params as kwargs or dictionary)
+stc.config(port_handle, location='//172.16.23.54/1/1')
 stc.config(port_handle, {'location': "//172.16.23.54/1/1"})
 
 # Create StreamBlock under Port
@@ -133,8 +134,9 @@ name_size_dict = stc.download_all()
 # Upload config file
 stc.upload(config.xml')
 
-# Load STC config from file
+# Load STC config from file (params as kwargs or dictionary).
 stc.perform('LoadFromXml', filename='config.xml')
+stc.perform('LoadFromXml', {'filename': 'config.xml'})
 
 # Detach from and delete the session
 stc.end_session(end_tcsession=True)

@@ -21,7 +21,7 @@ def config_ports(stc):
 
     loc = "//%s/%s/%s"%(chassis_addr, slot, p2)
     print('Configure Port 2 location:', loc)
-    stc.config(port2, {'location': loc})
+    stc.config(port2, location=loc)
 
     # Check location attribute of ports.
     print()
