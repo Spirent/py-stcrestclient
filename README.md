@@ -242,10 +242,10 @@ Nothing about the automation clients needs to change, including connecting to a 
 
 ### Existing STC Sessions
 
-If a session, identified by the specified user and session name, already exists then the adapter will raise an exception with a message stating this.  If this is not the desired behavior, then this can be changed by setting the value of the EXISTING_SESSION environment variable, or passing the existing_session argument into the new_session() function.  The value of the existing_session parameter determines the behavior in this case.  The existing_session parameter can have one of the following values: 'kill','join'
+If a session, identified by the specified user and session name, already exists then the adapter will raise an exception with a message stating this.  If this is not the desired behavior, then this can be changed by setting the value of the `EXISTING_SESSION` environment variable, or passing the `existing_session` argument into the `new_session()` function.  The value of `existing_session` determines the behavior, and the value may be one of the following: `kill`, `join`
 
-- kill: Terminate the existing session, and create a new one.
-- join: Continue using the existing session.
+- `kill`: Terminate the existing session, and create a new one.
+- `join`: Continue using the existing session.
 
 Any other value results in the default behavior, which is to raise an exception if the specified session already exists, and create a new session otherwise.
 
