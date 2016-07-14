@@ -136,6 +136,8 @@ class StcPythonRest(object):
             return
 
         upload_arg = None
+        if cmd.endswith('command'):
+            cmd = cmd[:-len('command')]
         if cmd in ('loadfromdatabase', 'queryresult'):
             upload_arg = 'databaseconnectionstring'
         elif cmd in ('loadfromxml', 'loadfilterfromlibrary',
@@ -188,7 +190,7 @@ class StcPythonRest(object):
                           {'ResultDataSet': rdsHandle})
 
     def new_session(self, server=None, session_name=None, user_name=None,
-                    kill_existing=False):
+                    existing_session=None):
         """Create a new session or attach to existing.
 
         Normally, this function is called automatically, and gets its parameter
@@ -200,6 +202,19 @@ class StcPythonRest(object):
         called directly by an automation script, then that script will not be
         able to revert to using the non-ReST API until the call to this
         function is removed.
+
+        Arguments:
+        server           -- STC server (Lab Server) addres.  If not set get
+                            value from STC_SERVER_ADDRESS environment variable.
+        session_name     -- Name part of session ID.  If not set get value from
+                            STC_SESSION_NAME environment variable.
+        user_name        -- User portion of session ID.  If not set get name of
+                            user this script is running as.
+        existing_session -- Behavior when session already exists.  Recognized
+                            values are 'kill' and 'join'.  If not set get value
+                            from EXISTING_SESSION environment variable.  If not
+                            set to recognized value, raise exception if session
+                            already exists.
 
         See also: stchttp.StcHttp(), stchttp.new_session()
 
@@ -224,7 +239,31 @@ class StcPythonRest(object):
                 user_name = getpass.getuser()
             except:
                 pass
-        self._stc.new_session(user_name, session_name, kill_existing)
+
+        if not existing_session:
+            # Try to get existing_session from environ if not passed in.
+            existing_session = os.environ.get('EXISTING_SESSION')
+
+        if existing_session:
+            existing_session = existing_session.lower()
+            if existing_session == 'kill':
+                # Kill any existing session and create a new one.
+                self._stc.new_session(user_name, session_name, True)
+                return self._stc
+            if existing_session == 'join':
+                # Create a new session, or join if already exists.
+                try:
+                    self._stc.new_session(user_name, session_name, False)
+                except RuntimeError as e:
+                    if str(e).find('already exists') >= 0:
+                        sid = ' - '.join((session_name, user_name))
+                        self._stc.join_session(sid)
+                    else:
+                        raise
+                return self._stc
+
+        # Create a new session, raise exception if session already exists.
+        self._stc.new_session(user_name, session_name, False)
         return self._stc
 
     def _check_session(self):

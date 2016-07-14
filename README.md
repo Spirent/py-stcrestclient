@@ -240,6 +240,21 @@ Running the adapt script, to install the new StcPython.py module, and then setti
 
 Nothing about the automation clients needs to change, including connecting to a TestCenter server session.
 
+### Existing STC Sessions
+
+If a session, identified by the specified user and session name, already exists then the adapter will raise an exception with a message stating this.  If this is not the desired behavior, then this can be changed by setting the value of the EXISTING_SESSION environment variable, or passing the existing_session argument into the new_session() function.  The value of the existing_session parameter determines the behavior in this case.  The existing_session parameter can have one of the following values: 'kill','join'
+
+- kill: Terminate the existing session, and create a new one.
+- join: Continue using the existing session.
+
+Any other value results in the default behavior, which is to raise an exception if the specified session already exists, and create a new session otherwise.
+
+### Environment Variables
+
+- `STC_SERVER_ADDRESS` specifies the STC server (Lab Server) addres.
+- `STC_SESSION_NAME` specifies the name label part of session ID.
+- `EXISTING_SESSION` specifies the behavior when the specified session already exists. Recognized values: "kill", "join"
+
 ## TestCenter system information.
 
 The stcrestclient package includes a module, `systeminfo`, to retrieve STC and API information from a system running a TestCenter server. This module is provided as a convenient command line tool to get information about a TestCenter server.
