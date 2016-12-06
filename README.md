@@ -45,8 +45,10 @@ All code works with Python2.7 and Python3.x.
 
 - Install [client adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter) for Python automation scripts to use ReST API, without any code change:
 
-   `python -m stcrestclient.adapt`
-   `export STC_REST_API=1`
+   ```
+   python -m stcrestclient.adapt
+   export STC_REST_API=1
+   ```
 
 ## Installation
 
@@ -210,7 +212,7 @@ The tccsh shell can also be use on the command line, by specifying a file contai
 
 A file is provided using the "--file" command line option.  A command file contains commands that are executed in order, and each command is on a separate line.  Comment lines, which are lines starting with "#", and blank lines are ignored.
 
-A command string is provided using the "-c" command line option.  A number of command can be specified, each separated by a ";" semicolon.  For example:
+A command string is provided using the "-c" command line option.  A number of commands can be specified, each separated by a ";" semicolon.  For example:
 
    `python -m stcrestclient.tccsh server -c 'new jdoe test1; stc_create project; stc_create port project1'`
 
@@ -273,7 +275,7 @@ A session can be ended in three ways, depending on the value of the end_tcsessio
 
 Specifying end_tcsession=False is useful to do before attaching an STC GUI or legacy automation script, to prevent having multiple controllers that may interfere with each other. This requires that the server is running version 2.1.5 or later of the STC ReST API.
 
-When using the interactive shell, tccsh, the equivalent commands are:
+When using the interactive shell, tccsh, the equivalent commands for the above items are:
 
 1. Invoke `join` with no argument
 1. Invoke `end` and specify "no"

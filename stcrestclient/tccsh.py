@@ -216,7 +216,7 @@ class TestCenterCommandShell(cmd.Cmd):
         with open(file_path, 'w') as outf:
             print('# tccsh commands recorded on:', time.ctime(), file=outf)
             print('#\n# Comment lines (starting with "#") and blank lines '
-                  'are ignored.\n# To execute the commands in ths file:\n'
+                  'are ignored.\n# To execute the commands in this file:\n'
                   '#    python -m stcrestclient.tccsh server --file ',
                   file_path, '\n#', file=outf)
 
@@ -229,7 +229,7 @@ class TestCenterCommandShell(cmd.Cmd):
         print('recording disabled')
 
     def do_exit(self, s):
-        """Exit the SessionManager shell."""
+        """Exit the TestCenter command shell."""
         return True
 
     def do_end(self, end_tcs):
@@ -777,7 +777,7 @@ class TestCenterCommandShell(cmd.Cmd):
         return
 
     #def do_EOF(self, s):
-    #    """Exit the SessionManager shell."""
+    #    """Exit the TestCenter command shell."""
     #    return True
 
     ###########################################################################

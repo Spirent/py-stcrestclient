@@ -172,7 +172,7 @@ class StcHttp(object):
 
         if end_tcsession is not None:
             if self._dbg_print:
-                print('===> deleting session:', self._sid)
+                print('===> deleting session:', sid)
             try:
                 if end_tcsession:
                     status, data = self._rest.delete_request('sessions', sid)

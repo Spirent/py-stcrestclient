@@ -204,7 +204,7 @@ class StcPythonRest(object):
         function is removed.
 
         Arguments:
-        server           -- STC server (Lab Server) addres.  If not set get
+        server           -- STC server (Lab Server) address.  If not set get
                             value from STC_SERVER_ADDRESS environment variable.
         session_name     -- Name part of session ID.  If not set get value from
                             STC_SESSION_NAME environment variable.
