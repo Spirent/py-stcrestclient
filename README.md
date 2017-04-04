@@ -152,11 +152,12 @@ This is an interactive command shell that provides Session Manager and Automatio
 
 To start the shell, use the following command:
 
-    python -m stcrestclient.tccsh
+    `tccsh`
 
-You will be prompted for the server address to connect to.  You can also supply the server address on the command line: `python -m stcrestclient.tccsh 10.8.232.105`  To see command line options: `python python -m stcrestclient.tccsh --help`
+You will be prompted for the server address to connect to.  You can also supply the server address on the command line: `tccsh 10.8.232.105`  To see command line options: `tccsh --help`
 
-    usage: python -m stcrestclient.tccsh server [options]
+    usage: tccsh server [options]
+	       python -m stcrestclient.tccsh server [options]
 
     Command shell that provides STC Automation API functionality using an
     interactive command line interface, or command file.
@@ -214,7 +215,7 @@ A file is provided using the "--file" command line option.  A command file conta
 
 A command string is provided using the "-c" command line option.  A number of commands can be specified, each separated by a ";" semicolon.  For example:
 
-   `python -m stcrestclient.tccsh server -c 'new jdoe test1; stc_create project; stc_create port project1'`
+   `tccsh server -c 'new jdoe test1; stc_create project; stc_create port project1'`
 
 The above will create a new test session, create a project, and create a port object under the project.  The output looks like this:
 
@@ -263,7 +264,11 @@ The stcrestclient package includes a module, `systeminfo`, to retrieve STC and A
 
 To get information about a TestCenter server use the following command:
 
-   `python -m stcrestclient.systeminfo server_addr`
+   `stcinfo server_addr`
+
+    or
+
+    `python -m stcrestclient.systeminfo server_addr`
 
 ## Ending a Session
 
