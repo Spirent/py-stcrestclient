@@ -41,7 +41,7 @@ All code works with Python2.7 and Python3.x.
 
 - Get information about a TestCenter server (and check if it is running):
 
-   `stcinfo` or `python -m stcrestclient.systeminfo server_addr`
+   `stcinfo server_addr` or `python -m stcrestclient.systeminfo server_addr`
 
 - Install [client adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter) for Python automation scripts to use ReST API, without any code change:
 
@@ -264,11 +264,7 @@ The stcrestclient package includes a module, `systeminfo`, to retrieve STC and A
 
 To get information about a TestCenter server use the following command:
 
-   `stcinfo server_addr`
-
-    or
-
-    `python -m stcrestclient.systeminfo server_addr`
+`stcinfo server_addr` or `python -m stcrestclient.systeminfo server_addr`
 
 ## Ending a Session
 
