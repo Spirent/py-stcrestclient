@@ -37,9 +37,17 @@ All code works with Python2.7 and Python3.x.
 
 - Interact with TestCenter server:
 
+   `tccsh`
+
+   or
+
    `python -m stcrestclient.tccsh`
 
 - Get information about a TestCenter server (and check if it is running):
+
+   `stcinfo`
+
+   or
 
    `python -m stcrestclient.systeminfo server_addr`
 
