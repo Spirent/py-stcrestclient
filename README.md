@@ -37,11 +37,11 @@ All code works with Python2.7 and Python3.x.
 
 - Interact with TestCenter server:
 
-   `tccsh` or `python -m stcrestclient.tccsh`
+   `tccsh`
 
 - Get information about a TestCenter server (and check if it is running):
 
-   `stcinfo server_addr` or `python -m stcrestclient.systeminfo server_addr`
+   `stcinfo server_addr`
 
 - Install [client adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter) for Python automation scripts to use ReST API, without any code change:
 
@@ -152,7 +152,7 @@ This is an interactive command shell that provides Session Manager and Automatio
 
 To start the shell, use the following command:
 
-    `tccsh`
+    `tccsh` or `python -m stcrestclient.tccsh`
 
 You will be prompted for the server address to connect to.  You can also supply the server address on the command line: `tccsh 10.8.232.105`  To see command line options: `tccsh --help`
 
