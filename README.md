@@ -8,14 +8,6 @@ Basic ReST functionality is provided by the resthttp module, and may be used for
 
 All code works with Python2.7 and Python3.x.
 
-## Project Links
-
-- Project page: <https://github.com/Spirent/py-stcrestclient>
-- Package download: <http://pypi.python.org/pypi/stcrestclient>
-- Documentation: See *Spirent TestCenter Automation Programmer's Reference*
-- License: <http://www.opensource.org/licenses/mit-license.php>
-- Automation to ReST API: [Quick Reference](https://github.com/Spirent/py-stcrestclient/blob/master/README.md#automation-api-to-rest-api-quick-reference)
-
 ## Quick Start
 - Get Python pip if not already installed (Download https://bootstrap.pypa.io/get-pip.py):
 
@@ -49,6 +41,14 @@ All code works with Python2.7 and Python3.x.
    python -m stcrestclient.adapt
    export STC_REST_API=1
    ```
+
+## Project Links
+
+- Project page: <https://github.com/Spirent/py-stcrestclient>
+- Package download: <http://pypi.python.org/pypi/stcrestclient>
+- Documentation: See *Spirent TestCenter Automation Programmer's Reference*
+- License: <http://www.opensource.org/licenses/mit-license.php>
+- Automation to ReST API: [Quick Reference](https://github.com/Spirent/py-stcrestclient/blob/master/README.md#automation-api-to-rest-api-quick-reference)
 
 ## Installation
 
