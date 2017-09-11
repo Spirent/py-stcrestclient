@@ -336,42 +336,76 @@ class TestCenterCommandShell(cmd.Cmd):
             print('  %s: %s' % (k, upload_info[k]))
 
     def do_download(self, file_name):
-        """Download a file from the session: download bll.session.log"""
+        """Download a file from the session.
+
+        Synopsis:
+            download file [saveas=download_path]
+
+        Example:
+            download bll.session.log
+            download bll.session.log saveas=/tmp/sessionXYZ.log
+        """
         if self._not_joined():
             return
 
-        def check_path(save_path):
-            save_name = os.path.basename(save_path)
-            if os.path.isdir(save_name):
-                print(save_name, 'is a directory')
-                return None
-            if os.path.isfile(save_name):
-                if (self.use_rawinput and
-                    not self._confirm('overwrite', save_name)):
-                    return None
-            return save_name
+        if file_name:
+            file_name = file_name.strip()
 
-        save_name = check_path(file_name) if file_name else None
-        while not save_name:
-            save_name = input('save file as: ')
-            if save_name:
-                save_name = check_path(save_name)
+        if not file_name:
+            print('specify a file to download')
+            return
+
+        def check_path(save_path):
+            if not save_path:
+                return False
+            if os.path.isdir(save_path):
+                print(save_path, 'is a directory')
+                return False
+            if os.path.isfile(save_path):
+                if (self.use_rawinput and
+                    not self._confirm('overwrite', save_path)):
+                    return False
+            return True
+
+        save_as = None
+        if file_name.find('saveas=') != -1:
+            file_name, save_as = file_name.split('saveas=', 1)
+            file_name = file_name.strip()
+            save_as = save_as.strip()
+            if not file_name:
+                print('specify a file to download')
+                return
+
+            while not check_path(save_as):
+                save_as = input('save file as: ')
+
+        elif not check_path(file_name.split('/')[-1]):
+            save_as = input('save file as: ')
+            while not check_path(save_as):
+                save_as = input('save file as: ')
 
         try:
-            save_name, bytes = self._stc.download(file_name)
+            save_path, bytes = self._stc.download(file_name, save_as)
         except RuntimeError as e:
             print(e)
             return
 
-        print('wrote %s bytes to %s' % (bytes, save_name))
+        print('wrote %s bytes to %s' % (bytes, save_path))
 
-    def do_download_all(self, s):
+    def do_download_all(self, save_dir):
         """Download all available files.
+
+        Synopsis:
+            download_all [save_dir]
+
+        Example:
+            download_all
+            download_all /tmp/testfiles
 
         This command will not prompt before overwriting existing files.
         """
         try:
-            saves = self._stc.download_all()
+            saves = self._stc.download_all(save_dir)
         except RuntimeError as e:
             print(e)
             return
