@@ -42,6 +42,10 @@ All code works with Python2.7 and Python3.x.
    export STC_REST_API=1
    ```
 
+- Display API documentation:
+
+   `pydoc stcrestclient.stchttp`
+
 ## Project Links
 
 - Project page: <https://github.com/Spirent/py-stcrestclient>
