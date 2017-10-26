@@ -155,8 +155,13 @@ For example usage, look in the [examples](https://github.com/Spirent/py-stcrestc
 This is an interactive command shell that provides Session Manager and Automation API functionality using a command line interface.  This command accesses a TestCenter Server over its HTTP interface, so no local BLL installation is needed.  This utility is primarily useful for testing and debugging the ReST API.  It should run on any platform with Python 2.7 or 3.x.
 
 To start the shell, use the following command:
-
-    `tccsh` or `python -m stcrestclient.tccsh`
+```
+tccsh
+```
+or
+```
+python -m stcrestclient.tccsh
+```
 
 You will be prompted for the server address to connect to.  You can also supply the server address on the command line: `tccsh 10.8.232.105`  To see command line options: `tccsh --help`
 
