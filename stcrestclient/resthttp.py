@@ -10,6 +10,11 @@ import sys
 
 import requests
 
+if sys.hexversion < 0x03000000:
+    unibytes = unicode
+else:
+    unibytes = bytes
+
 
 class RestHttpError(Exception):
 
@@ -398,11 +403,7 @@ class RestHttp(object):
             if data is None:
                 data = rsp.content
 
-            if data and sys.version < '3':
-                # Py2.7
-                data = self._uc_to_str(data, to_lower)
-            elif to_lower:
-                data = self._rsp_to_lower(data)
+            data = self._conv_to_str(data, to_lower)
 
             if self._dbg_print:
                 print('===> response content-type:',
@@ -433,27 +434,17 @@ class RestHttp(object):
     def _list_query_str(items):
         return '?' + '&'.join(items)
 
-    def _uc_to_str(self, data, lc):
+    def _conv_to_str(self, data, lc):
         if isinstance(data, dict):
-            return {self._uc_to_str(k, lc): self._uc_to_str(v, lc)
-                    for k, v in data.iteritems()}
+            return {self._conv_to_str(k, lc): self._conv_to_str(v, lc)
+                    for k, v in data.items()}
         elif isinstance(data, list):
-            return [self._uc_to_str(i, lc) for i in data]
-        elif isinstance(data, unicode):
+            return [self._conv_to_str(i, lc) for i in data]
+        elif isinstance(data, unibytes):
             if lc:
                 return str(data).lower()
             return str(data)
         elif isinstance(data, str) and lc:
-            return data.lower()
-        return data
-
-    def _rsp_to_lower(self, data):
-        if isinstance(data, dict):
-            return {self._rsp_to_lower(k): self._rsp_to_lower(v)
-                    for k, v in data.iteritems()}
-        elif isinstance(data, list):
-            return [self._rsp_to_lower(i) for i in data]
-        elif isinstance(data, str):
             return data.lower()
         return data
 

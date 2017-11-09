@@ -81,7 +81,7 @@ class StcPythonRest(object):
         if topic == 'commands':
             return '\n'.join(sorted((
                 cmd_help['desc']
-                for cmd_help in self._HELP_INFO.itervalues())))
+                for cmd_help in self._HELP_INFO.values())))
 
         info = self._HELP_INFO.get(topic)
         if info:
