@@ -200,15 +200,16 @@ Type help to see help info on the available commands.  This displays the help me
 
 	Documented commands (type help <topic>):
 	========================================
-	chassis       end           recording_off   stc_disconnect
-	chassis_info  exit          recording_on    stc_disconnectall
-	connections   files         server          stc_get
-	debug_off     help          stc_apply       stc_help
-	debug_on      info          stc_config      stc_log
-	delete        is_connected  stc_connect     stc_perform
-	delete_all    join          stc_connectall  system_info
-	download      ls            stc_create      upload
-	download_all  new           stc_delete      wait_until_complete
+	chassis       exit           server             stc_get
+	chassis_info  files          set_timeout        stc_help
+	connections   help           stc_apply          stc_log
+	debug_off     info           stc_config         stc_perform
+	debug_on      is_connected   stc_connect        system_info
+	delete        join           stc_connectall     upload
+	delete_all    ls             stc_create         wait_until_complete
+	download      new            stc_delete
+	download_all  recording_off  stc_disconnect
+	end           recording_on   stc_disconnectall
 
 To see help for a command, type "help" followed by the command name.  For example, type `help ls` to see help on the `ls` command.
 

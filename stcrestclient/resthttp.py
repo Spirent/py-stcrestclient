@@ -80,7 +80,7 @@ class RestHttp(object):
     """
 
     def __init__(self, base_url, user=None, password=None, ssl_verify=True,
-                 debug_print=False):
+                 debug_print=False, timeout=None):
         """Initialize the ReST API HTTP wrapper object.
 
         Arguments:
@@ -89,6 +89,7 @@ class RestHttp(object):
         password    -- Optional password for basic auth.
         ssl_verify  -- Set to False to disable SSL verification (not secure).
         debug_print -- Enable debug print statements.
+        timeout     -- Number of seconds to wait for a response.
 
         """
         self._base_url = base_url.strip('/')
@@ -98,6 +99,9 @@ class RestHttp(object):
         self._password = password
         self._verify = ssl_verify
         self._dbg_print = debug_print
+        self._timeout = None
+        if timeout:
+            self._timeout = timeout
 
         # autheticated API
         if user and password:
@@ -136,6 +140,17 @@ class RestHttp(object):
         """Turn debug printing off."""
         self._dbg_print = False
 
+    def timeout(self):
+        """Return the current timeout value."""
+        return self._timeout
+
+    def set_timeout(self, timeout):
+        """Seconds to wait for a response.  Any zero-value means no timeout."""
+        if not timeout:
+            self._timeout = None
+            return
+        self._timeout = timeout
+
     def add_header(self, header, value):
         """Include additional header with each request."""
         self._base_headers[header] = value
@@ -172,7 +187,7 @@ class RestHttp(object):
 
         try:
             rsp = requests.head(url, headers=self._base_headers,
-                                verify=self._verify)
+                                verify=self._verify, timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 
@@ -193,7 +208,7 @@ class RestHttp(object):
 
         try:
             rsp = requests.get(url, query_items, headers=headers,
-                               verify=self._verify)
+                               verify=self._verify, timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 
@@ -209,7 +224,7 @@ class RestHttp(object):
 
         try:
             rsp = requests.post(url, data=params, headers=headers,
-                                verify=self._verify)
+                                verify=self._verify, timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 
@@ -225,7 +240,7 @@ class RestHttp(object):
 
         try:
             rsp = requests.put(url, params, headers=headers,
-                               verify=self._verify)
+                               verify=self._verify, timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 
@@ -246,7 +261,7 @@ class RestHttp(object):
 
         try:
             rsp = requests.delete(url, params=query_items, headers=headers,
-                                  verify=self._verify)
+                                  verify=self._verify, timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 
@@ -257,7 +272,15 @@ class RestHttp(object):
 
     def download_file(self, container, resource, save_path=None, accept=None,
                       query_items=None):
-        """Download a file."""
+        """Download a file.
+
+        If a timeout defined, it is not a time limit on the entire download;
+        rather, an exception is raised if the server has not issued a response
+        for timeout seconds (more precisely, if no bytes have been received on
+        the underlying socket for timeout seconds). If no timeout is specified
+        explicitly, requests do not time out.
+
+        """
         url = self.make_url(container, resource)
         if not save_path:
             save_path = resource.split('/')[-1]
@@ -270,7 +293,7 @@ class RestHttp(object):
 
         try:
             rsp = requests.get(url, query_items, headers=headers, stream=True,
-                               verify=self._verify)
+                               verify=self._verify, timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
 
@@ -320,7 +343,7 @@ class RestHttp(object):
         with open(src_file_path, 'rb') as up_file:
             try:
                 rsp = requests.request(method, url, headers=headers,
-                                       data=up_file)
+                                       data=up_file, timeout=self._timeout)
             except requests.exceptions.ConnectionError as e:
                 RestHttp._raise_conn_error(e)
 
@@ -340,7 +363,8 @@ class RestHttp(object):
         with open(src_file_path, 'rb') as up_file:
             files = {'file': (dst_name, up_file, content_type)}
             try:
-                rsp = requests.post(url, headers=headers, files=files)
+                rsp = requests.post(url, headers=headers, files=files,
+                                    timeout=self._timeout)
             except requests.exceptions.ConnectionError as e:
                 RestHttp._raise_conn_error(e)
 
@@ -361,7 +385,8 @@ class RestHttp(object):
                 multi_files.append(
                     ('files', (dst_name, open(src_path, 'rb'), content_type)))
 
-            rsp = requests.post(url, headers=headers, files=multi_files)
+            rsp = requests.post(url, headers=headers, files=multi_files,
+                                timeout=self._timeout)
         except requests.exceptions.ConnectionError as e:
             RestHttp._raise_conn_error(e)
         finally:
@@ -436,13 +461,13 @@ class RestHttp(object):
         if isinstance(data, dict):
             return {self._conv_to_str3(k, lc): self._conv_to_str3(v, lc)
                     for k, v in data.items()}
-        elif isinstance(data, list):
+        if isinstance(data, list):
             return [self._conv_to_str3(i, lc) for i in data]
-        elif isinstance(data, bytes):
+        if isinstance(data, bytes):
             if lc:
                 return data.decode().lower()
             return data.decode()
-        elif isinstance(data, str) and lc:
+        if isinstance(data, str) and lc:
             return data.lower()
         return data
 
@@ -450,13 +475,13 @@ class RestHttp(object):
         if isinstance(data, dict):
             return {self._conv_to_str2(k, lc): self._conv_to_str2(v, lc)
                     for k, v in data.iteritems()}
-        elif isinstance(data, list):
+        if isinstance(data, list):
             return [self._conv_to_str2(i, lc) for i in data]
-        elif isinstance(data, unicode):
+        if isinstance(data, unicode):
             if lc:
                 return str(data).lower()
             return str(data)
-        elif isinstance(data, str) and lc:
+        if isinstance(data, str) and lc:
             return data.lower()
         return data
 

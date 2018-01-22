@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import sys
 
-if sys.version_info < (2,7):
+if sys.version_info < (2, 7):
     print("requires python2.7 or later", file=sys.stderr)
     sys.exit(1)
 
