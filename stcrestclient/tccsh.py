@@ -24,6 +24,9 @@ if sys.version_info < (2, 7):
     print("requires python2.7 or later", file=sys.stderr)
     sys.exit(1)
 
+if __name__ == '__main__' and __package__ is None:
+    __package__ = 'stcrestclient'
+
 try:
     from . import stchttp
     from . import resthttp
