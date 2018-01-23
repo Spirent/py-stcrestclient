@@ -20,9 +20,12 @@ import shlex
 import time
 import getpass
 
-if sys.version_info < (2,7):
+if sys.version_info < (2, 7):
     print("requires python2.7 or later", file=sys.stderr)
     sys.exit(1)
+
+if __name__ == '__main__' and __package__ is None:
+    __package__ = 'stcrestclient'
 
 try:
     from . import stchttp
@@ -92,7 +95,11 @@ class TestCenterCommandShell(cmd.Cmd):
         if session.endswith(' -') and session.count('-') == 1:
             session += ' '
         print(session)
-        info = self._stc.session_info(session)
+        try:
+            info = self._stc.session_info(session)
+        except Exception as e:
+            print(e)
+            return
         for k in info:
             print('  %s: %s' % (k, info[k]))
 
@@ -109,7 +116,7 @@ class TestCenterCommandShell(cmd.Cmd):
             if session != self._stc.session_id():
                 self._stc.join_session(session)
             self._stc.end_session()
-        except RuntimeError as e:
+        except Exception as e:
             print(e)
 
     def complete_delete(self, text, line, begidx, endidx):
@@ -214,8 +221,8 @@ class TestCenterCommandShell(cmd.Cmd):
 
         if (os.path.isfile(file_path) and self.use_rawinput and
             not self._confirm('Overwrite file', file_path)):
-                print('recording not enabled')
-                return
+            print('recording not enabled')
+            return
 
         with open(file_path, 'w') as outf:
             print('# tccsh commands recorded on:', time.ctime(), file=outf)
@@ -268,8 +275,9 @@ class TestCenterCommandShell(cmd.Cmd):
 
         try:
             self._stc.end_session(yn)
-        except RuntimeError as e:
+        except Exception as e:
             print(e)
+            return
         if yn:
             print('Terminated test session', current)
         else:
@@ -434,6 +442,16 @@ class TestCenterCommandShell(cmd.Cmd):
         sys_info = self._stc.system_info()
         for k in sys_info:
             print(k, ': ', sys_info[k], sep='')
+
+
+    def do_set_timeout(self, timeout):
+        """Set number of seconds to wait for response."""
+        try:
+            self._stc.set_timeout(float(timeout))
+            print('timeout set to', timeout, 'seconds')
+        except Exception as e:
+            print(e)
+
 
     ###########################################################################
     # Automation API
@@ -825,9 +843,10 @@ class TestCenterCommandShell(cmd.Cmd):
     def _update_sessions(self):
         try:
             self._sessions = self._stc.sessions()
-        except resthttp.RestHttpError as e:
+        except Exception as e:
             print('Error updating sessions:', e)
-            raise
+            return False
+        return True
 
     def _complete_session(self, text):
         if not text:
@@ -916,7 +935,15 @@ def main():
     ap.add_argument('--port', '-p', metavar='PORT', type=int,
                     help='Server TCP port to connect to (default %s).'
                     % (stchttp.DEFAULT_PORT,))
+    ap.add_argument('--version', '-V', action='store_true',
+                    help='Print stcrestclient version number and exit.')
     args = ap.parse_args()
+
+    if args.version:
+        import pkg_resources
+        pkg_name = 'stcrestclient'
+        print(pkg_name, pkg_resources.get_distribution(pkg_name).version)
+        return 0
 
     server_ok = False
     while not server_ok:

@@ -33,7 +33,7 @@ class StcHttp(object):
     """
 
     def __init__(self, server=None, port=None, api_version=1,
-                 debug_print=False):
+                 debug_print=False, timeout=None):
         """Initialize the REST API wrapper object.
 
         If the port to connect to is not specified by the port argument, or by
@@ -46,6 +46,7 @@ class StcHttp(object):
                        variable STC_SERVER_PORT or DEFAULT_PORT if None.
         api_version -- What API version to use.
         debug_print -- Enable debug print statements.
+        timeout     -- Number of seconds to wait for a response.
 
         """
         if not server:
@@ -59,7 +60,7 @@ class StcHttp(object):
         rest = None
 
         url = resthttp.RestHttp.url('http', server, port, 'stcapi')
-        rest = resthttp.RestHttp(url, debug_print=debug_print)
+        rest = resthttp.RestHttp(url, debug_print=debug_print, timeout=timeout)
         try:
             rest.get_request('sessions')
         except (socket.error, resthttp.ConnectionError,
@@ -74,6 +75,14 @@ class StcHttp(object):
 
     def session_id(self):
         return self._sid
+
+    def timeout(self):
+        """Return the current timeout value."""
+        return self._rest.timeout()
+
+    def set_timeout(self, timeout):
+        """Seconds to wait for a response.  Any zero-value means no timeout."""
+        self._rest.set_timeout(timeout)
 
     def new_session(self, user_name=None, session_name=None,
                     kill_existing=False):
