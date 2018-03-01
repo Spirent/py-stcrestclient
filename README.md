@@ -22,7 +22,7 @@ All code works with Python2.7 and Python3.x.
    `python`
    ```python
    >>> from stcrestclient import stchttp
-   >>> stc = stchttp.StcHttp('stcserver.somewhere.com')
+   >>> stc = stchttp.StcHttp('stcserver.somewhere.com', timeout=5)
    >>> sid = stc.new_session('JoeUser', 'ExampleTest')
    >>> stc.system_info()
    ```
@@ -93,6 +93,9 @@ To use the STC ReST client library, import the `stchttp.py` module, create a new
 ```python
 from stcrestclient import stchttp
 stc = stchttp.StcHttp('stcserver.somewhere.com')
+
+# Set seconds to wait for response.  A zero-value means no timeout.
+stc.set_timeout(5)
 
 # Create and join new session
 sid = stc.new_session('JoeUser', 'ExampleTest')
