@@ -17,6 +17,14 @@ All code works with Python2.7 and Python3.x.
 
    `pip install -U stcrestclient`
 
+- Interact with TestCenter server:
+
+   `tccsh`
+
+- Get information about a TestCenter server (and check if it is running):
+
+   `stcinfo server_addr`
+
 - Write Python code to talk with TestCenter server:
 
    `python`
@@ -26,14 +34,6 @@ All code works with Python2.7 and Python3.x.
    >>> sid = stc.new_session('JoeUser', 'ExampleTest')
    >>> stc.system_info()
    ```
-
-- Interact with TestCenter server:
-
-   `tccsh`
-
-- Get information about a TestCenter server (and check if it is running):
-
-   `stcinfo server_addr`
 
 - Install [client adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter) for Python automation scripts to use ReST API, without any code change:
 
