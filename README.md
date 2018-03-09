@@ -317,8 +317,8 @@ When using the interactive shell, tccsh, the equivalent commands for the above i
 | ::stc::release           | Supported using perform                                |
 | ::stc::reserve           | Supported using perform                                |
 | ::stc::sleep             | NOT SUPPORTED -- client must implement                 |
-| ::stc::subscribe         | Supported using perform                                |
-| ::stc::unsubscribe       | Supported using perform                                |
+| ::stc::subscribe         | Supported using perform('ResultsSubscribe', kwargs)    |
+| ::stc::unsubscribe       | Supported using perform('ResultDataSetUnsubscribe', {'ResultDataSet': rdsHandle})   |
 | ::stc::waitUntilComplete | Implemented in client by polling sequencer state              |
 
 Note: The STC ReST API supports additional methods, not specified in this table, that perform common STC automation tasks.  For example, the REST API provides methods for connecting or disconnecting multiple or all chassis using a POST request.
