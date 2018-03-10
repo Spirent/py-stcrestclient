@@ -132,14 +132,21 @@ class TestCenterCommandShell(cmd.Cmd):
                 self.do_delete(session)
 
     def do_new(self, s):
-        """Create a new session: new user_name session_name"""
+        """Create a new session: new user_name session_name [analytics=false]"""
         if self._stc.session_id():
             # End the current session, without deleting TC session.
             self._stc.end_session(False)
         user_name = ''
         session_name = None
+        analytics = None
         params = s.split()
         if params:
+            for p in params:
+                if p.startswith('analytics='):
+                    a = p.split('=', 1)[-1]
+                    if a:
+                        analytics = a.strip()
+                    break
             user_name = params.pop(0)
             if params:
                 session_name = params.pop(0)
@@ -151,12 +158,16 @@ class TestCenterCommandShell(cmd.Cmd):
                 pass
 
         try:
-            sid = self._stc.new_session(user_name, session_name)
+            sid = self._stc.new_session(user_name, session_name,
+                                        analytics=analytics)
         except Exception as e:
             print(e)
             return
         self._update_sessions()
-        print('Created and joined session:', sid)
+        a_msg = ''
+        if analytics:
+            a_msg = ' (analytics=%s)' % (analytics,)
+        print('Created and joined session%s: %s' % (a_msg, sid))
 
     def do_files(self, s):
         """List the files available in the current session."""

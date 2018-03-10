@@ -85,7 +85,7 @@ class StcHttp(object):
         self._rest.set_timeout(timeout)
 
     def new_session(self, user_name=None, session_name=None,
-                    kill_existing=False):
+                    kill_existing=False, analytics=None):
         """Create a new test session.
 
         The test session is identified by the specified user_name and optional
@@ -98,6 +98,9 @@ class StcHttp(object):
         kill_existing -- If there is an existing session, with the same session
                          name and user name, then terminate it before creating
                          a new session
+        analytics     -- Optional boolean value to disable or enable analytics
+                         for new session.  None will use setting configured on
+                         server.
 
         Return:
         True is session started, False if session was already started.
@@ -110,6 +113,8 @@ class StcHttp(object):
         if not user_name or not user_name.strip():
             user_name = ''
         params = {'userid': user_name, 'sessionname': session_name}
+        if analytics not in (None, ''):
+            params['analytics'] = str(analytics).lower()
         try:
             status, data = self._rest.post_request('sessions', None, params)
         except resthttp.RestHttpError as e:
