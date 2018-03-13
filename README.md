@@ -17,7 +17,7 @@ All code works with Python2.7 and Python3.x.
 
    `pip install -U stcrestclient`
 
-- Interact with TestCenter server:
+- Interact with TestCenter server using the [command-line shell](https://github.com/Spirent/py-stcrestclient#using-the-rest-api-command-line-shell-tccsh):
 
    `tccsh`
 
@@ -153,9 +153,9 @@ stc.end_session(end_tcsession=True)
 
 For example usage, look in the [examples](https://github.com/Spirent/py-stcrestclient/tree/master/examples) directory for Python code examples.  The examples, like the client lib, will run with either Python2.7 or Python3.x.
 
-## Using the ReST API Command line Shell: tccsh
+## Using the ReST API Command-line Shell: tccsh
 
-This is an interactive command shell that provides Session Manager and Automation API functionality using a command line interface.  This command accesses a TestCenter Server over its HTTP interface, so no local BLL installation is needed.  This utility is primarily useful for testing and debugging the ReST API.  It should run on any platform with Python 2.7 or 3.x.
+This is an interactive command shell that provides Session Manager and Automation API functionality using a command-line interface.  This command accesses a TestCenter Server over its HTTP interface, so no local BLL installation is needed.  This utility is primarily useful for testing and debugging the ReST API.  It should run on any platform with Python 2.7 or 3.x.
 
 To start the shell, use the following command:
 ```
@@ -193,7 +193,7 @@ You will be prompted for the server address to connect to.  You can also supply 
       --port PORT, -p PORT
           Server TCP port to connect to (default 80).
 
-Notice that commands can be entered from a file (--file) or from a command string (-c), as an alternative to the normal interactive mode.
+Commands can be entered from a file (`--file`) or from a command string (`-c`), as an alternative to the normal interactive mode.
 
 ### Interactive tccsh
 
@@ -214,19 +214,19 @@ Type help to see help info on the available commands.  This displays the help me
 	download_all  recording_off  stc_disconnect
 	end           recording_on   stc_disconnectall
 
-To see help for a command, type "help" followed by the command name.  For example, type `help ls` to see help on the `ls` command.
+To see help for a command, type `help` followed by the command name.  For example, type `help new` to see help on the `new` command.
 
 Use `Tab` for command auto-completion. Command auto-completion may not work on Windows.
 
-The interactive shell has a recording feature that is enabled by the "recording_on" command.  This records commands, entered interactively, to a file that can be played back later through tccsh.  Executing the recorded commands is done by running tccsh and specifying the file containing the recorded commands, using the --file command line option.
+The interactive shell has a recording feature that is enabled by the `recording_on` command.  This records commands, entered interactively, to a file that can be played back later through tccsh.  Executing the recorded commands is done by running tccsh and specifying the file containing the recorded commands, using the `--file` command line option.
 
-### Command line tccsh
+### Command-line tccsh
 
-The tccsh shell can also be use on the command line, by specifying a file containing tccsh commands, or by providing a command string.
+The tccsh shell can also be use on the command-line, by specifying a file containing tccsh commands, or by providing a command string.
 
-A file is provided using the "--file" command line option.  A command file contains commands that are executed in order, and each command is on a separate line.  Comment lines, which are lines starting with "#", and blank lines are ignored.
+A file is provided using the `--file` command line option.  A command file contains commands that are executed in order, and each command is on a separate line.  Comment lines (lines starting with "#") and blank lines are ignored.
 
-A command string is provided using the "-c" command line option.  A number of commands can be specified, each separated by a ";" semicolon.  For example:
+A command string is provided using the `-c` command line option.  A number of commands can be specified, each separated by a ";" semicolon.  For example:
 
    `tccsh server -c 'new test1 user=joe; stc_create project; stc_create port project1'`
 
@@ -240,7 +240,7 @@ created: port1
 
 ## Automation Client ReST API Adapter
 
-This package includes a ReST API client adapter module.  The ReST API client adapter is functionally identical to the legacy StcPython.py module, except that it communicates with the STC ReST API.  Without requiring any code changes, this allows STC automation scripts to communicate over ReST, and not need a local STC installation.  This ReST adapter enables ReST API access if the environment variable STC_REST_API is set to a non-empty value.  If STC_REST_API is not set, then the non-rest STC client module is loaded if there is a local STC installation.
+This package includes a ReST API client adapter module.  The ReST API client adapter is functionally identical to the legacy StcPython.py module, except that it communicates with the STC ReST API.  Without requiring any code changes, this allows STC automation scripts to communicate over ReST, and not need a local STC installation.  This ReST adapter enables ReST API access if the environment variable `STC_REST_API` is set to a non-empty value.  If `STC_REST_API` is not set, then the non-rest STC client module is loaded if there is a local STC installation.
 
 ### Installing Client Adapter module
 
@@ -250,9 +250,9 @@ To enable existing Python automation scripts to use the STC ReST API, run the ad
 python -m stcrestclient.adapt
 ```
 
-This installs a new StcPython.py client module, that can load the ReST API adapter or the legacy client module. If there is an existing legacy StcPython.py, as when run from in the STC installation directory, StcPython.py is renamed and will be used if STC_REST_API environment vazriable is not set.  By setting or un-setting STC_REST_API, the same client scripts can choose between using a client STC instance or STC ReST API to communicate with test sessions served by TestCenter server.
+This installs a new StcPython.py client module, that can load the ReST API adapter or the legacy client module. If there is an existing legacy StcPython.py, as when run from in the STC installation directory, StcPython.py is renamed and will be used if `STC_REST_API` environment vazriable is not set.  By setting or un-setting `STC_REST_API`, the same client scripts can choose between using a client STC instance or STC ReST API to communicate with test sessions served by TestCenter server.
 
-Running the adapt script, to install the new StcPython.py module, and then setting STC_REST_API=1, allows existing automation scripts to run on a system where there is no STC installation.  
+Running the adapt script, to install the new StcPython.py module, and then setting `STC_REST_API=1`, allows existing automation scripts to run on a system where there is no STC installation.  
 
 Nothing about the automation clients needs to change, including connecting to a TestCenter server session.
 
