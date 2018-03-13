@@ -132,7 +132,27 @@ class TestCenterCommandShell(cmd.Cmd):
                 self.do_delete(session)
 
     def do_new(self, s):
-        """Create a new session: new user_name session_name [analytics=false]"""
+        """Create and join a new test session.
+
+        The session that is created is named with the session name and the user
+        name separated with ' - '.
+
+        Synopsis:
+            new [session_name] [user=user_name] [analytics=true/false]
+
+        Examples:
+            new
+            new test1
+            new user=samuels
+            new rfctest user=taylor
+            new checknet user=recardo analytics=false
+
+        If the session name is not given, then a session name is automatically
+        assigned, starting with "AutoCreatedSession_00".  If the user name is
+        not specified, then tccsh tries to get the name of logged-in user.  If
+        analytics is not specified, then the current server setting is used.
+
+        """
         if self._stc.session_id():
             # End the current session, without deleting TC session.
             self._stc.end_session(False)
@@ -140,22 +160,42 @@ class TestCenterCommandShell(cmd.Cmd):
         session_name = None
         analytics = None
         params = s.split()
-        if params:
-            for p in params:
-                if p.startswith('analytics='):
-                    a = p.split('=', 1)[-1]
-                    if a:
-                        analytics = a.strip()
-                    break
-            user_name = params.pop(0)
-            if params:
-                session_name = params.pop(0)
-        else:
+        rm = []
+        for i, p in enumerate(params):
+            if not user_name and p.startswith('user='):
+                rm.insert(0, i)
+                u = p.split('=', 1)[-1]
+                if u:
+                    user_name = u.strip()
+            elif not analytics and p.startswith('analytics='):
+                rm.insert(0, i)
+                a = p.split('=', 1)[-1]
+                if a:
+                    analytics = a.strip()
+
+        # Remove kw parameters from params list.
+        for idx in rm:
+            del params[idx]
+
+        # If user name not specified, try to get the name of the current user.
+        if not user_name:
             try:
-                # Try to get the name of the current user.
                 user_name = getpass.getuser()
             except:
                 pass
+
+        # If there is a parameter remaining, it must be session name.
+        if params:
+            session_name = params.pop(0)
+
+        msg = 'Creating new session'
+        if session_name:
+            msg += ' "%s"' % (session_name,)
+        if user_name:
+            msg += ' for user "%s"' % (user_name,)
+        if analytics:
+            msg += ' (analytics=%s)' % (analytics,)
+        print(msg, '...')
 
         try:
             sid = self._stc.new_session(user_name, session_name,
@@ -164,10 +204,7 @@ class TestCenterCommandShell(cmd.Cmd):
             print(e)
             return
         self._update_sessions()
-        a_msg = ''
-        if analytics:
-            a_msg = ' (analytics=%s)' % (analytics,)
-        print('Created and joined session%s: %s' % (a_msg, sid))
+        print('Created and joined session:', sid)
 
     def do_files(self, s):
         """List the files available in the current session."""
