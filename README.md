@@ -228,7 +228,7 @@ A file is provided using the "--file" command line option.  A command file conta
 
 A command string is provided using the "-c" command line option.  A number of commands can be specified, each separated by a ";" semicolon.  For example:
 
-   `tccsh server -c 'new jdoe test1; stc_create project; stc_create port project1'`
+   `tccsh server -c 'new test1 user=joe; stc_create project; stc_create port project1'`
 
 The above will create a new test session, create a project, and create a port object under the project.  The output looks like this:
 
@@ -258,7 +258,7 @@ Nothing about the automation clients needs to change, including connecting to a 
 
 ### Existing STC Sessions
 
-If a session, identified by the specified user and session name, already exists then the adapter will raise an exception with a message stating this.  If this is not the desired behavior, then this can be changed by setting the value of the `EXISTING_SESSION` environment variable, or passing the `existing_session` argument into the `new_session()` function.  The value of `existing_session` determines the behavior, and the value may be one of the following: `kill`, `join`
+If a session, identified by the specified user and session name, already exists then the adapter raises an exception.  If this is not the desired behavior, then this can be changed by setting the value of the `EXISTING_SESSION` environment variable, or passing the `existing_session` argument into the `new_session()` function.  The value of `existing_session` determines the behavior, and the value may be one of the following: `kill`, `join`
 
 - `kill`: Terminate the existing session, and create a new one.
 - `join`: Continue using the existing session.
