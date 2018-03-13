@@ -164,14 +164,15 @@ class TestCenterCommandShell(cmd.Cmd):
         for i, p in enumerate(params):
             if not user_name and p.startswith('user='):
                 rm.insert(0, i)
-                u = p.split('=', 1)[-1]
+                u = p.split('=', 1)[-1].strip()
                 if u:
-                    user_name = u.strip()
+                    user_name = u
             elif not analytics and p.startswith('analytics='):
                 rm.insert(0, i)
-                a = p.split('=', 1)[-1]
+                a = p.split('=', 1)[-1].strip()
                 if a:
-                    analytics = a.strip()
+                    true_vals = ('1', 'true', 'on', 'yes', 'y', 't')
+                    analytics = a.lower() in true_vals
 
         # Remove kw parameters from params list.
         for idx in rm:
@@ -193,7 +194,7 @@ class TestCenterCommandShell(cmd.Cmd):
             msg += ' "%s"' % (session_name,)
         if user_name:
             msg += ' for user "%s"' % (user_name,)
-        if analytics:
+        if analytics is not None:
             msg += ' (analytics=%s)' % (analytics,)
         print(msg, '...')
 
