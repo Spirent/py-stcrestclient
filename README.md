@@ -100,6 +100,9 @@ stc.set_timeout(5)
 # Create and join new session
 sid = stc.new_session('JoeUser', 'ExampleTest')
 
+# Join an already existing session.
+stc.join('OtherTest - JoeUser')
+
 # Get system information
 stc.system_info()
 
@@ -151,7 +154,7 @@ stc.perform('LoadFromXml', {'filename': 'config.xml'})
 stc.end_session(end_tcsession=True)
 ```
 
-For example usage, look in the [examples](https://github.com/Spirent/py-stcrestclient/tree/master/examples) directory for Python code examples.  The examples, like the client lib, will run with either Python2.7 or Python3.x.
+For example usage, look in the [examples](https://github.com/Spirent/py-stcrestclient/tree/master/examples) directory for Python code examples.  The examples, like the client lib, will run with either Python2.7 or Python3.x.  The print out command line help for a specific function above, use `pydoc`. For example: `pydoc stcrestclient.stchttp.StcHttp.new_session`
 
 ## Using the ReST API Command-line Shell: tccsh
 
