@@ -49,7 +49,7 @@ All code works with Python2.7 and Python3.x.
 ## Project Links
 
 - Project page: <https://github.com/Spirent/py-stcrestclient>
-- Package download: <http://pypi.python.org/pypi/stcrestclient>
+- Package download: <https://pypi.org/project/stcrestclient/>
 - Documentation: See *Spirent TestCenter Automation Programmer's Reference*
 - License: <http://www.opensource.org/licenses/mit-license.php>
 - Automation to ReST API: [Quick Reference](https://github.com/Spirent/py-stcrestclient/blob/master/README.md#automation-api-to-rest-api-quick-reference)
