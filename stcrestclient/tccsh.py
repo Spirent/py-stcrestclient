@@ -115,7 +115,7 @@ class TestCenterCommandShell(cmd.Cmd):
         try:
             if session != self._stc.session_id():
                 self._stc.join_session(session)
-            self._stc.end_session()
+            self._stc.end_session(True)
         except Exception as e:
             print(e)
 
@@ -154,8 +154,9 @@ class TestCenterCommandShell(cmd.Cmd):
 
         """
         if self._stc.session_id():
-            # End the current session, without deleting TC session.
-            self._stc.end_session(False)
+            # End current session, without deleting TC session or
+            # disconnecting REST API from TC session.
+            self._stc.end_session(None)
         user_name = ''
         session_name = None
         analytics = None
