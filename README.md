@@ -51,6 +51,7 @@ All code works with Python2.7 and Python3.x.
    ```
    python -m stcrestclient.adapt
    export STC_REST_API=1
+   export STC_SERVER_ADDRESS=10.107.119.174'
    ```
 
 - Display API documentation:
