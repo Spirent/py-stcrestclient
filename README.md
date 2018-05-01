@@ -253,11 +253,20 @@ To enable existing Python automation scripts to use the STC ReST API, run the ad
 python -m stcrestclient.adapt
 ```
 
-This installs a new StcPython.py client module, that can load the ReST API adapter or the legacy client module. If there is an existing legacy StcPython.py, as when run from in the STC installation directory, StcPython.py is renamed and will be used if `STC_REST_API` environment vazriable is not set.  By setting or un-setting `STC_REST_API`, the same client scripts can choose between using a client STC instance or STC ReST API to communicate with test sessions served by TestCenter server.
+This installs a new StcPython.py client module, that allows existing automation scripts to work using either the ReST API adapter or the legacy client module. When the above command is run from within the STC installation directory, `StcPython.py` is replaced with a new file that operates using ReST or legacy (non-ReST) mode, depending on whether the `STC_REST_API` environment variable is set.
 
-Running the adapt script, to install the new StcPython.py module, and then setting `STC_REST_API=1`, allows existing automation scripts to run on a system where there is no STC installation.  
+- Activate ReST adapter: `export STC_REST_API=1; export STC_SERVER_ADDRESS=labserve_addr`
+- Deactivate ReST adapter: `unset STC_REST_API`
 
-Nothing about the automation clients needs to change, including connecting to a TestCenter server session.
+Set `STC_REST_API` and `STC_SERVER_ADDRESS` in the login profile to avoid having to set these every login. This way automation scripts will use ReST by default.  
+
+Nothing about the Python automation clients needs to change.  They can be run as normal, and can even connect to existing existing TestCenter server sessions.
+
+### Running Without STC Installation
+
+Installing the ReST adapter and setting `STC_REST_API` and `STC_SERVER_ADDRESS` allows existing automation scripts to run on a system where there is no STC installation.  All that is required on the system Python, the `stcrestclient` package, and the `StcPython.py` file that was replaced when the adapter was installed.
+
+To run your Python automation scripts, have `StcPython.py` in the same directory as your scripts, or its location is in [`PYTHONPATH`](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH), set the `STC_REST_API` and `STC_SERVER_ADDRESS` environment variables, and then run your the automation scripts.  The automation scripts should operate using ReST. 
 
 ### Existing STC Sessions
 
