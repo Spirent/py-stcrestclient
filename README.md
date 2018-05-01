@@ -1,10 +1,10 @@
 # Python STC ReST API Client: stcrestclient
 
-The stcrestclient package provides the stchttp.py ReST API wrapper module.  This allows simple function calls, nearly identical to those provided by StcPython.py, to be used to access TestCenter server sessions via the STC ReST API.
+The stcrestclient package provides the `stchttp` ReST API library module.  This allows simple function calls, nearly identical to those provided by `StcPython.py`, to be used to access TestCenter server sessions via the STC ReST API.
 
-The stcrestclient package also includes the command-line shell `tccsh` that lets you work interactively with remote STC sessions via the ReST API.
+The stcrestclient package also includes the command-line shell `tccsh` that lets you work interactively with remote STC sessions via the ReST API.  This is useful for testing and debugging without having to write any code.
 
-Basic ReST functionality is provided by the resthttp module, and may be used for writing ReST clients independent of STC.  This module is built on top of the [Requests](http://docs.python-requests.org/) package.
+Basic ReST functionality is provided by the `resthttp` module, and may be used for writing ReST clients independent of STC.  This module is built on top of the [Requests](http://docs.python-requests.org/) package.
 
 All code works with Python2.7 and Python3.x.
 
