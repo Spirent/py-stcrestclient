@@ -8,6 +8,17 @@ Basic ReST functionality is provided by the resthttp module, and may be used for
 
 All code works with Python2.7 and Python3.x.
 
+## Topics
+
+- [Quick Start](https://github.com/Spirent/py-stcrestclient#quick-start)
+- [Installation](https://github.com/Spirent/py-stcrestclient#installation)
+- [stchttp Module](https://github.com/Spirent/py-stcrestclient#using-the-stchttp-module)
+- [Using tccsh Command Shell](https://github.com/Spirent/py-stcrestclient#using-the-rest-api-command-line-shell-tccsh)
+- [Automation Client ReST Adapter](https://github.com/Spirent/py-stcrestclient#automation-client-rest-api-adapter)
+- [TestCenter Server Information](https://github.com/Spirent/py-stcrestclient#testcenter-server-information)
+- [Ending Sessions](https://github.com/Spirent/py-stcrestclient#ending-sessions-with-stcrestclient)
+- [Automation to ReST API Quick Reference](https://github.com/Spirent/py-stcrestclient#automation-api-to-rest-api-quick-reference)
+
 ## Quick Start
 - Get Python pip if not already installed (Download https://bootstrap.pypa.io/get-pip.py):
 
@@ -45,14 +56,6 @@ All code works with Python2.7 and Python3.x.
 - Display API documentation:
 
    `pydoc stcrestclient.stchttp`
-
-## Project Links
-
-- Project page: <https://github.com/Spirent/py-stcrestclient>
-- Package download: <https://pypi.org/project/stcrestclient/>
-- Documentation: See *Spirent TestCenter Automation Programmer's Reference*
-- License: <http://www.opensource.org/licenses/mit-license.php>
-- Automation to ReST API: [Quick Reference](https://github.com/Spirent/py-stcrestclient/blob/master/README.md#automation-api-to-rest-api-quick-reference)
 
 ## Installation
 
@@ -264,7 +267,7 @@ Nothing about the Python automation clients needs to change.  They can be run as
 
 ### Running Without STC Installation
 
-Installing the ReST adapter and setting `STC_REST_API` and `STC_SERVER_ADDRESS` allows existing automation scripts to run on a system where there is no STC installation.  All that is required on the system Python, the `stcrestclient` package, and the `StcPython.py` file that was replaced when the adapter was installed.
+Installing the ReST adapter and setting `STC_REST_API` and `STC_SERVER_ADDRESS` allows existing automation scripts to run on a system where there is no STC installation.  All that is required on the system Python, the stcrestclient package, and the `StcPython.py` file that was replaced when the adapter was installed.
 
 To run your Python automation scripts, have `StcPython.py` in the same directory as your scripts, or its location is in [`PYTHONPATH`](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH), set the `STC_REST_API` and `STC_SERVER_ADDRESS` environment variables, and then run your the automation scripts.  The automation scripts should operate using ReST. 
 
@@ -283,15 +286,17 @@ Any other value results in the default behavior, which is to raise an exception 
 - `STC_SESSION_NAME` specifies the name label part of session ID.
 - `EXISTING_SESSION` specifies the behavior when the specified session already exists. Recognized values: "kill", "join"
 
-## TestCenter system information.
+## TestCenter Server Information.
 
-The stcrestclient package includes a module, `systeminfo`, to retrieve STC and API information from a system running a TestCenter server. This module is provided as a convenient command line tool to get information about a TestCenter server.
+The stcrestclient package includes a command, `systeminfo`, to retrieve STC and API information from a system running a TestCenter server. This module is provided as a convenient command line tool to get information about a TestCenter server.
 
 To get information about a TestCenter server use the following command:
 
 `stcinfo server_addr` or `python -m stcrestclient.systeminfo server_addr`
 
-## Ending a Session
+## Ending Sessions with stcrestclient
+
+### When using `stchttp` module
 
 A session can be ended in three ways, depending on the value of the end_tcsession parameter of the StcHttp.end_session() method:
 
@@ -299,17 +304,15 @@ A session can be ended in three ways, depending on the value of the end_tcsessio
 1. end_tcsession=False: End client controller, but leave test session on server.
 1. end_tcsession=True: End client controller and terminate test session (default).
 
-Specifying end_tcsession=False is useful to do before attaching an STC GUI or legacy automation script, to prevent having multiple controllers that may interfere with each other. This requires that the server is running version 2.1.5 or later of the STC ReST API.
+Specifying end_tcsession=False ends the client controller.  This means that it detaches the ReST API's STC controller from the test session. This is useful to do before attaching an STC GUI or legacy automation script, to prevent having multiple controllers that may interfere with each other. This requires that the server is running version 2.1.5 or later of the STC ReST API.
 
-When using the interactive shell, tccsh, the equivalent commands for the above items are:
+### When using `tccsh` shell
 
-1. Invoke `join` with no argument
-1. Invoke `end` and specify "no"
-1. Invoke `end` and specify "yes"
+When using the `tccsh` command shell, the equivalent commands for the above items are:
 
-## Requirements
-
-- [Python2.7 or Python3.x](https://www.python.org/downloads/)
+1. Invoke `join` with no argument: Stop using session locally
+1. Invoke `end` and specify "no": End client controller only
+1. Invoke `end` and specify "yes": End client controller and test session
 
 ## Automation API to ReST API Quick Reference
 
