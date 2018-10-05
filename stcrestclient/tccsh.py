@@ -323,15 +323,41 @@ class TestCenterCommandShell(cmd.Cmd):
         if yn:
             print('...waiting for session to end...')
 
+        ended = False
         try:
             self._stc.end_session(yn)
         except Exception as e:
             print(e)
             return
         if yn:
+            self._update_sessions()
             print('Terminated test session', current)
         else:
             print('Detached from test session', current)
+
+    def do_kill(self, session):
+        """Terminate the specified test session"""
+        if not session:
+            print('specify a session to join')
+            return
+
+        if session.endswith(' -') and session.count('-') == 1:
+            session += ' '
+        if self._not_session(session):
+            return
+
+        print('...waiting for session to end...')
+        try:
+            self._stc.end_session(True, session)
+        except Exception as e:
+            print(e)
+            return
+
+        self._update_sessions()
+        print('Terminated test session', session)
+
+    def complete_kill(self, text, line, begidx, endidx):
+        return self._complete_session(text)
 
     def do_server(self, server):
         """Specify STC server.
