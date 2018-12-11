@@ -107,15 +107,23 @@ class TestCenterCommandShell(cmd.Cmd):
         return self._complete_session(text)
 
     def do_delete(self, session):
-        """Delete the specified session: delete testA - jdoe"""
+        """Delete the specified session
+
+        Signals the session to cleanup and exit gracefully.
+
+        Synopsis:
+            delete session_name
+
+        Example:
+            delete traptest - waits
+
+        """
         if session.endswith(' -') and session.count('-') == 1:
             session += ' '
         if self._not_session(session):
             return
         try:
-            if session != self._stc.session_id():
-                self._stc.join_session(session)
-            self._stc.end_session(True)
+            self._stc.end_session(True, session)
         except Exception as e:
             print(e)
 
@@ -336,7 +344,18 @@ class TestCenterCommandShell(cmd.Cmd):
             print('Detached from test session', current)
 
     def do_kill(self, session):
-        """Terminate the specified test session"""
+        """Terminate the specified test session
+
+        For STC ReST API version >= 2.30, this forcefully terminates the test
+        session on the server.  Otherwise, behavior is same as delete.
+
+        Synopsis:
+            kill session_name
+
+        Example:
+            kill so939 - joe
+
+        """
         if not session:
             print('specify a session to join')
             return
@@ -348,7 +367,7 @@ class TestCenterCommandShell(cmd.Cmd):
 
         print('...waiting for session to end...')
         try:
-            self._stc.end_session(True, session)
+            self._stc.end_session('kill', session)
         except Exception as e:
             print(e)
             return

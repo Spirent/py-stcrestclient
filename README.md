@@ -208,18 +208,18 @@ Once started and connected to a server, you will see a prompt that contains the 
 
 Type help to see help info on the available commands.  This displays the help menu:
 
-	Documented commands (type help <topic>):
-	========================================
-	chassis       exit           server             stc_get
-	chassis_info  files          set_timeout        stc_help
-	connections   help           stc_apply          stc_log
-	debug_off     info           stc_config         stc_perform
-	debug_on      is_connected   stc_connect        system_info
-	delete        join           stc_connectall     upload
-	delete_all    ls             stc_create         wait_until_complete
-	download      new            stc_delete
-	download_all  recording_off  stc_disconnect
-	end           recording_on   stc_disconnectall
+    Documented commands (type help <topic>):
+    ========================================
+    chassis       exit           recording_on    stc_disconnectall  
+    chassis_info  files          server          stc_get            
+    connections   help           set_timeout     stc_help           
+    debug_off     info           stc_apply       stc_log            
+    debug_on      is_connected   stc_config      stc_perform        
+    delete        join           stc_connect     system_info        
+    delete_all    kill           stc_connectall  upload             
+    download      ls             stc_create      wait_until_complete
+    download_all  new            stc_delete    
+    end           recording_off  stc_disconnect
 
 To see help for a command, type `help` followed by the command name.  For example, type `help new` to see help on the `new` command.
 
@@ -317,24 +317,24 @@ When using the `tccsh` command shell, the equivalent commands for the above item
 
 ## Automation API to ReST API Quick Reference
 
-| Automation API           | ReST API Equivalent                                    |
-| ------------------------ | :----------------------------------------------------- |
-| ::stc::apply	           | PUT http://<i></i>host.domain/stcapi/apply                    |
-| ::stc::config	           | PUT http://<i></i>host.domain/stcapi/objects/{object}         |
-| ::stc::connect           | PUT http://<i></i>host.domain/stcapi/connections/{chassis}    |
-| ::stc::create            | POST http://<i></i>host.domain/stcapi/objects/                |
-| ::stc::delete            | DELETE http://<i></i>host.domain/stcapi/objects/{handle}      |
-| ::stc::disconnect        | DELETE http://<i></i>host.domain/stcapi/connections/{chassis} |
-| ::stc::get               | GET http://<i></i>host.domain/stcapi/objects/{object}         |
-| ::stc::help              | GET http://<i></i>host.domain/stcapi/help/{help_subject}      |
-| ::stc::help list         | GET http://<i></i>host.domain/stcapi/help/list?{search_info}  |
-| ::stc::log               | PUT http://<i></i>host.domain/stcapi/system/log/              |
-| ::stc::perform           | PUT http://<i></i>host.domain/stcapi/perform/{command_name}   |
-| ::stc::release           | Supported using `perform('releasePort', {'Location': ...})`   |
-| ::stc::reserve           | Supported using `perform('reservePort', {'Location': ...})`   |
-| ::stc::sleep             | NOT SUPPORTED -- client must implement                 |
-| ::stc::subscribe         | Supported using `perform('ResultsSubscribe', kwargs)`  |
-| ::stc::unsubscribe       | Supported using `perform('ResultDataSetUnsubscribe', {'ResultDataSet': rdsHandle})` |
-| ::stc::waitUntilComplete | Implemented in client by polling sequencer state              |
+| Automation API    | StcHttp API                  | ReST Equivalent                                               |
+| ----------------- | ---------------------------- | ------------------------------------------------------------- |  
+| apply             | `apply()`                    | PUT http://<i></i>host.domain/stcapi/apply                    |
+| config            | `config(obj, ..)`            | PUT http://<i></i>host.domain/stcapi/objects/{object}         |
+| connect           | `connect([chassis, ..])`     | PUT http://<i></i>host.domain/stcapi/connections/{chassis}    |
+| create            | `create(obj_type, ..)`       | POST http://<i></i>host.domain/stcapi/objects/                |
+| delete            | `delete(obj)`                | DELETE http://<i></i>host.domain/stcapi/objects/{object}      |
+| disconnect        | `disconnect([chassis, ..])`  | DELETE http://<i></i>host.domain/stcapi/connections/{chassis} |
+| get               | `get(obj, ..)`               | GET http://<i></i>host.domain/stcapi/objects/{object}         |
+| help              | `help(subject)`              | GET http://<i></i>host.domain/stcapi/help/{subject}           |
+| help list         | `help('list', ..)`           | GET http://<i></i>host.domain/stcapi/help/list?{search_info}  |
+| log               | `log(level, msg)`            | POST http://<i></i>host.domain/stcapi/system/log/             |
+| perform           | `perform(command, ..)`       | POST http://<i></i>host.domain/stcapi/perform/{command}       |
+| release           | `perform('releasePort', ..)` | See perform |
+| reserve           | `perform('reservePort', ..)` | See perform |
+| sleep             | N/A                          | NOT SUPPORTED -- client must implement |
+| subscribe         | `perform(`<br>`'ResultsSubscribe', ..)` | See perform          |
+| unsubscribe       | `perform(`<br>`'ResultDataSetUnsubscribe', ..)` | See perform  |
+| waitUntilComplete | `wait_until_complete(timeout)` | Polls sequencer state         |
 
-Note: The STC ReST API supports additional methods, not specified in this table, that perform common STC automation tasks.  For example, the REST API provides methods for connecting or disconnecting multiple or all chassis using a POST request.
+Note: The STC ReST API supports additional methods, not specified in this table, that perform common STC automation tasks.  For example, the REST API provides methods for connecting or disconnecting all chassis using a POST request.
