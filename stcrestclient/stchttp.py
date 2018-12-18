@@ -119,8 +119,7 @@ class StcHttp(object):
             status, data = self._rest.post_request('sessions', None, params)
         except resthttp.RestHttpError as e:
             if kill_existing and str(e).find('already exists') >= 0:
-                self._sid = ' - '.join((session_name, user_name))
-                self.end_session()
+                self.end_session('kill', ' - '.join((session_name, user_name)))
             else:
                 raise RuntimeError('failed to create session: ' + str(e))
 
@@ -165,6 +164,8 @@ class StcHttp(object):
                 End client controller, but leave test session on server.
             - end_tcsession=True:
                 End client controller and terminate test session (default).
+            - end_tcsession='kill':
+                Forcefully terminate test session.
 
         Specifying end_tcsession=False is useful to do before attaching an STC
         GUI or legacy automation script, so that there are not multiple
@@ -199,7 +200,11 @@ class StcHttp(object):
             if end_tcsession:
                 if self._dbg_print:
                     print('===> deleting session:', sid)
-                status, data = self._rest.delete_request('sessions', sid)
+                if end_tcsession == 'kill':
+                    status, data = self._rest.delete_request(
+                        'sessions', sid, 'kill')
+                else:
+                    status, data = self._rest.delete_request('sessions', sid)
                 count = 0
                 while 1:
                     time.sleep(5)
