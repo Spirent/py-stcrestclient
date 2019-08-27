@@ -179,7 +179,7 @@ class StcHttp(object):
         end_tcsession -- How to end the session (see above)
         sid           -- ID of session to end.  None to use current session.
         timeout       -- Seconds to wait for session to end.  None or 0 does
-                         not wait, and -1 waits forever session to end.
+                         not wait and -1 waits forever for session to end.
 
         Return:
         True if session ended, false if session was not started.
