@@ -103,7 +103,7 @@ class StcHttp(object):
                          server.
 
         Return:
-        True is session started, False if session was already started.
+        True if session started, False if session was already started.
 
         """
         if self.started():
@@ -153,7 +153,7 @@ class StcHttp(object):
 
         return data['version']
 
-    def end_session(self, end_tcsession=True, sid=None):
+    def end_session(self, end_tcsession=True, sid=None, timeout=30):
         """End this test session.
 
         A session can be ended in three ways, depending on the value of the
@@ -178,6 +178,8 @@ class StcHttp(object):
         Arguments
         end_tcsession -- How to end the session (see above)
         sid           -- ID of session to end.  None to use current session.
+        timeout       -- Seconds to wait for session to end.  None or 0 does
+                         not wait, and -1 waits forever session to end.
 
         Return:
         True if session ended, false if session was not started.
@@ -205,7 +207,13 @@ class StcHttp(object):
                         'sessions', sid, 'kill')
                 else:
                     status, data = self._rest.delete_request('sessions', sid)
-                count = 0
+
+                if not timeout:
+                    return True
+
+                deadline = None
+                if timeout > 0:
+                    deadline = time.time() + timeout
                 while 1:
                     time.sleep(5)
                     if self._dbg_print:
@@ -213,10 +221,8 @@ class StcHttp(object):
                     ses_list = self.sessions()
                     if not ses_list or sid not in ses_list:
                         break
-                    count += 1
-                    if count == 3:
-                        raise RuntimeError("test session has not stopped")
-
+                    if deadline and deadline - time.now() <= 0:
+                        raise RuntimeError("timeout waiting for session to stop")
                 if self._dbg_print:
                     print('===> ok - deleted test session')
             else:
