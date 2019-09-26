@@ -9,7 +9,7 @@ def main():
     setup(
         name='stcrestclient',
         version= '1.8.3',
-        author='Andrew Gillis',
+        author='Spirent',
         author_email='support@spirent.com',
         url='https://github.com/Spirent/py-stcrestclient',
         description='stcrestclient: Client modules for STC ReST API',
