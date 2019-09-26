@@ -221,7 +221,7 @@ class StcHttp(object):
                     ses_list = self.sessions()
                     if not ses_list or sid not in ses_list:
                         break
-                    if deadline and deadline - time.now() <= 0:
+                    if deadline and deadline - time.time() <= 0:
                         raise RuntimeError("timeout waiting for session to stop")
                 if self._dbg_print:
                     print('===> ok - deleted test session')

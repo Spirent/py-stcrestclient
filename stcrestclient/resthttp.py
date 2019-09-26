@@ -34,10 +34,6 @@ class RestHttpError(Exception):
             return '%s: %s' % (self.http_error, self.msg)
         return self.http_error
 
-    def code(self):
-        """Get API error code."""
-        return self.code
-
     def status(self):
         """Get HTTP status."""
         return self.http_status
