@@ -10,7 +10,7 @@ def main():
         name='stcrestclient',
         version= '1.8.3',
         author='Andrew Gillis',
-        author_email='andrew.gillis@spirent.com',
+        author_email='support@spirent.com',
         url='https://github.com/Spirent/py-stcrestclient',
         description='stcrestclient: Client modules for STC ReST API',
         long_description = 'See https://github.com/Spirent/py-stcrestclient#python-stc-rest-api-client-stcrestclient',
