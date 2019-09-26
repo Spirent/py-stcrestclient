@@ -921,10 +921,10 @@ class TestCenterCommandShell(cmd.Cmd):
             print('Stopped waiting in wait_until_complete.')
         except RuntimeError as e:
             print(e)
-        except Exception as e:
-            print('error:', e)
         except ValueError:
             print('timeout must be number of seconds to wait')
+        except Exception as e:
+            print('error:', e)
         return
 
     #def do_EOF(self, s):
