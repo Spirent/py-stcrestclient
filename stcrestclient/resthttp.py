@@ -7,6 +7,7 @@ from __future__ import print_function
 import base64
 import os
 import sys
+import copy
 
 import requests
 
@@ -502,3 +503,63 @@ class RestHttp(object):
         if params:
             print('  --- Params ---')
             print('   ', params)
+
+    def bulk_get_request(self, container, resource=None, query_items=None, depth=1, 
+                    accept=None, to_lower=False):
+        """Send a GET request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+        myheaders = copy.deepcopy(headers)
+        myheaders["X-STC-API-Children-Depth"] = str(depth)
+
+        if query_items and isinstance(query_items, (list, tuple, set)):
+            url += RestHttp._list_query_str(query_items)
+            query_items = None
+
+        try:
+            rsp = requests.get(url, query_items, headers=myheaders,
+                               verify=self._verify, timeout=self._timeout)
+        except requests.exceptions.ConnectionError as e:
+            RestHttp._raise_conn_error(e)
+
+        if self._dbg_print:
+            self.__print_req('GET', rsp.url, headers, None)
+
+        return self._handle_response(rsp, to_lower)
+
+    def bulk_put_request(self, container, resource=None, params=None, accept=None):
+        """Send a PUT request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+        myheaders = copy.deepcopy(headers)
+        myheaders["content-length"] = str(len(params))
+        myheaders["content-type"] = "application/json"
+        try:
+            rsp = requests.put(url, params, headers=myheaders,
+                               verify=self._verify, timeout=self._timeout)
+        except requests.exceptions.ConnectionError as e:
+            RestHttp._raise_conn_error(e)
+
+        if self._dbg_print:
+            self.__print_req('PUT', rsp.url, headers, params)
+
+        return self._handle_response(rsp)
+
+    def bulk_post_request(self, container, resource=None, params=None, accept=None):
+        """Send a POST request."""
+        url = self.make_url(container, resource)
+        headers = self._make_headers(accept)
+        myheaders = copy.deepcopy(headers)
+        myheaders["content-length"] = str(len(params))
+        myheaders["content-type"] = "application/json"
+
+        try:
+            rsp = requests.post(url, data=params, headers=myheaders,
+                                verify=self._verify, timeout=self._timeout)
+        except requests.exceptions.ConnectionError as e:
+            RestHttp._raise_conn_error(e)
+
+        if self._dbg_print:
+            self.__print_req('POST', rsp.url, headers, params)
+
+        return self._handle_response(rsp)
