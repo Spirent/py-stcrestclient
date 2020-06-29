@@ -740,7 +740,7 @@ class StcHttp(object):
                 attributes = kwattrs
         
         attributes = json.dumps(attributes)
-        data = self._rest.bulk_put_request('bulk/objects', quote(locations), attributes)
+        status, data = self._rest.bulk_put_request('bulk/objects', quote(locations), attributes)
         return data
 
     def bulkcreate(self, object_type, attributes=None, **kwattrs):
