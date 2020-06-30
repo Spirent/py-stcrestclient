@@ -34,7 +34,8 @@ def bulkapi_device(stc):
     print('Creating the chidlren under the emulateddevice starting with name \'dev\'')
     ret = stc.bulkcreateex("emulateddevice[@name^='dev']", 
                   [{'ipV4if': {'name': 'myipv4if1', 'Address': '196.81.0.1', 'Gateway': '196.81.0.1'}},
-                   {'EthIIIf': {'SourceMac': 'be:00:00:00:01:00'}}], vlanif=[{'vlanid': 102}, {'vlanid': 103}])
+                   {'EthIIIf': {'SourceMac': 'be:00:00:00:01:00'}}], 
+				   vlanif=[{'vlanid': 102}, {'vlanid': 103}])
     print(ret)
     assert str(ret['status'])=="success"
     assert len(ret['handles'])==6
