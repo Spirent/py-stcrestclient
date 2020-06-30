@@ -14,6 +14,8 @@ from __future__ import print_function
 import time
 import os
 import socket
+import json
+from requests.utils import quote
 
 try:
     from . import resthttp
@@ -711,3 +713,140 @@ class StcHttp(object):
                 return (0, 0, 0)
 
         return self._api_ver
+
+    def has_bulk_ops(self):
+        status, data = self._rest.get_request('system')
+        if 'features' in data:
+            features = data['features']
+            if str(features).find('bulk-api') != -1:
+                return True
+        return False
+
+
+    def bulkconfig(self, locations, attributes=None, **kwattrs):
+        """Sets or modifies one or more object attributes or relations.
+
+        Arguments can be supplied either as a dictionary or as keyword
+        arguments.  Examples:
+            stc.bulkconfig('emulateddevice[@name="mydev"]/bgprouterconfig/bgpipv4routeconfig[0]',  {'NextHopIncrement': '0.0.1.0'})
+            stc.bulkconfig('emulateddevice[@name="mydev"]/bgprouterconfig/bgpipv4routeconfig[1]',  NextHopIncrement='0.0.1.0')
+
+        Arguments:
+        locations     -- the locations of object to modify.
+        attributes -- Dictionary of attributes (name-value pairs).
+        kwattrs    -- Optional keyword attributes (name=value pairs).
+
+        """
+        self._check_session()
+        if kwattrs:
+            if attributes:
+                if isinstance(attributes, dict):
+                    attributes.update(kwattrs)
+                elif isinstance(attributes, list):
+                    for attr in attributes:
+                        attr.update(kwattrs)
+            else:
+                attributes = kwattrs
+        
+        attributes = json.dumps(attributes)
+        status, data = self._rest.bulk_put_request('bulk/objects', quote(locations), attributes)
+        return data
+
+    def bulkcreate(self, object_type, attributes=None, **kwattrs):
+        """Create a new automation object.
+
+        Arguments:
+        object_type -- Type of object to create.
+        attributes  -- Dictionary of attributes (name-value pairs).
+        kwattrs     -- Optional keyword attributes (name=value pairs).
+
+        """
+        data = self._bulkcreateex(object_type, None, attributes, **kwattrs)
+        return data
+
+    def bulkcreateex(self, under, attributes=None, **kwattrs):
+        data = self._bulkcreateex(None, under, attributes, **kwattrs)
+        return data
+
+    def _bulkcreateex(self, object_type, under=None, attributes=None, **kwattrs):
+        """Create a new automation object.
+
+        Arguments:
+        object_type -- Type of object to create.
+        under       -- Handle of the parent of the new object.
+        attributes  -- Dictionary of attributes (name-value pairs).
+        kwattrs     -- Optional keyword attributes (name=value pairs).
+
+        """
+        self._check_session()
+        params = {'object_type': object_type}
+        if under:
+            params['under'] = under
+        if attributes:
+            if isinstance(attributes, dict):
+                params.update(attributes)
+                if kwattrs:
+                    params.update(kwattrs)
+            elif isinstance(attributes, list):
+                if kwattrs:
+                    for attr in attributes:
+                        attr.update(kwattrs)
+                params['bulklist']  = attributes
+        else:
+            if kwattrs:
+                params.update(kwattrs)
+
+        myparams = json.dumps(params)
+        status, data = self._rest.bulk_post_request('bulk/objects', None, myparams)
+        return data
+
+    def bulkget(self, locations, args=None, depth=1):
+        """Returns the value(s) of one or more object attributes.
+
+        If multiple arguments, this method returns a dictionary of argument
+        names mapped to the value returned by each argument.
+
+        If a single argument is given, then the response is a list of values
+        for that argument.
+
+        Arguments:
+        handle -- Handle that identifies object to get info for.
+        args  -- Zero or more attributes or relationships.
+
+
+        """
+        self._check_session()
+        status, data = self._rest.bulk_get_request('bulk/objects', quote(locations), args, depth)
+        return data
+
+    def bulkperform(self, command, params=None, **kwargs):
+        """Execute a command.
+
+        Arguments:
+        command -- Command to execute.
+        params  -- Optional.  Dictionary of parameters (name-value pairs).
+        kwargs  -- Optional keyword arguments (name=value pairs).
+
+        Return:
+        Data from command.
+
+        """
+        self._check_session()
+        if not params:
+            params = {}
+        if kwargs:
+            params.update(kwargs)
+        params['command'] = command
+        status, data = self._rest.post_request('bulk/perform', None, params)
+        return data
+
+    def bulkdelete(self, handles):
+        """bulkDelete the specified object.
+
+        Arguments:
+        handle -- Handles of objects to delete.
+
+        """
+        self._check_session()
+        status, data = self._rest.delete_request('bulk/objects', str(handles))
+        return data
