@@ -760,9 +760,6 @@ class StcHttp(object):
         attributes  -- Dictionary of attributes (name-value pairs).
         kwattrs     -- Optional keyword attributes (name=value pairs).
 
-        Return:
-        Handle of newly created object.
-
         """
         data = self._bulkcreateex(object_type, None, attributes, **kwattrs)
         return data
@@ -779,9 +776,6 @@ class StcHttp(object):
         under       -- Handle of the parent of the new object.
         attributes  -- Dictionary of attributes (name-value pairs).
         kwattrs     -- Optional keyword attributes (name=value pairs).
-
-        Return:
-        Handle of newly created object.
 
         """
         self._check_session()
@@ -819,13 +813,6 @@ class StcHttp(object):
         handle -- Handle that identifies object to get info for.
         args  -- Zero or more attributes or relationships.
 
-        Return:
-        If multiple input arguments are given:
-        {attrib_name:attrib_val, attrib_name:attrib_val, ..}
-
-        If single input argument is given, then a single string value is
-        returned.  NOTE: If the string contains multiple substrings, then the
-        client will need to parse these.
 
         """
         self._check_session()
@@ -834,11 +821,6 @@ class StcHttp(object):
 
     def bulkperform(self, command, params=None, **kwargs):
         """Execute a command.
-
-        Arguments can be supplied either as a dictionary or as keyword
-        arguments.  Examples:
-            stc.bulkperform('LoadFromXml', {'filename':'config.xml'})
-            stc.bulkperform('LoadFromXml', filename='config.xml')
 
         Arguments:
         command -- Command to execute.
@@ -855,14 +837,14 @@ class StcHttp(object):
         if kwargs:
             params.update(kwargs)
         params['command'] = command
-        status, data = self._rest.post_request('bulkperform', None, params)
+        status, data = self._rest.post_request('bulk/perform', None, params)
         return data
 
     def bulkdelete(self, handles):
         """bulkDelete the specified object.
 
         Arguments:
-        handle -- Handle of object to delete.
+        handle -- Handles of objects to delete.
 
         """
         self._check_session()
