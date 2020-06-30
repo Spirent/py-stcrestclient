@@ -714,13 +714,22 @@ class StcHttp(object):
 
         return self._api_ver
 
+    def is_bulk_version(self):
+        status, data = self._rest.get_request('system')
+        if 'features' in data:
+            features = data['features']
+            if str(features).find('bulk-api') != -1:
+                return True
+        return False
+
+
     def bulkconfig(self, locations, attributes=None, **kwattrs):
         """Sets or modifies one or more object attributes or relations.
 
         Arguments can be supplied either as a dictionary or as keyword
         arguments.  Examples:
-            stc.bulkconfig('xpath:emulateddevice[@name="mydev"]/bgprouterconfig/bgpipv4routeconfig[0]',  {'NextHopIncrement': '0.0.1.0'})
-            stc.bulkconfig('xpath:emulateddevice[@name="mydev"]/bgprouterconfig/bgpipv4routeconfig[1]',  NextHopIncrement='0.0.1.0')
+            stc.bulkconfig('emulateddevice[@name="mydev"]/bgprouterconfig/bgpipv4routeconfig[0]',  {'NextHopIncrement': '0.0.1.0'})
+            stc.bulkconfig('emulateddevice[@name="mydev"]/bgprouterconfig/bgpipv4routeconfig[1]',  NextHopIncrement='0.0.1.0')
 
         Arguments:
         locations     -- the locations of object to modify.
