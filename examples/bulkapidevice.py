@@ -11,6 +11,8 @@ def bulkapi_device(stc):
     port1 = 'port1'
     port2 = 'port2'
 
+    isbulkserver = stc.has_bulk_ops()
+
     print('Creating emulateddevice on Port 1')
     dev = stc.create('emulateddevice', 'project1', {'name': 'devd', 'AffiliationPort-targets': port1})  
 

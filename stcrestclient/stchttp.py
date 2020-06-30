@@ -714,7 +714,7 @@ class StcHttp(object):
 
         return self._api_ver
 
-    def is_bulk_version(self):
+    def has_bulk_ops(self):
         status, data = self._rest.get_request('system')
         if 'features' in data:
             features = data['features']
