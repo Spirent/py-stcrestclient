@@ -151,6 +151,14 @@ class StcPythonRest(object):
             for k in kwargs:
                 kl = k.lower()
                 if kl == upload_arg:
+                    # For the QueryResult command, only attempt to upload the DB file if it exists,
+                    # otherwise, use a file on the Lab Server.
+                    # The results DB file typically already exists on the Lab Server. There is no
+                    # need to re-upload it.
+                    if cmd == 'queryresult' and not os.path.isfile(kwargs[k]):  
+                        # Attempt to use a file already on the Lab Server.                                      
+                        break
+
                     up_info = self._stc.upload(kwargs[k])
                     # Replace the upload path with the uploaded name.
                     kwargs[k] = up_info['name']
