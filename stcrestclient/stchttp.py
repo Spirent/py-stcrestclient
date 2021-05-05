@@ -87,7 +87,7 @@ class StcHttp(object):
         self._rest.set_timeout(timeout)
 
     def new_session(self, user_name=None, session_name=None,
-                    kill_existing=False, analytics=None):
+                    kill_existing=False, analytics=None, start_timeout=None):
         """Create a new test session.
 
         The test session is identified by the specified user_name and optional
@@ -103,6 +103,7 @@ class StcHttp(object):
         analytics     -- Optional boolean value to disable or enable analytics
                          for new session.  None will use setting configured on
                          server.
+        start_timeout -- Optional timeout in seconds for starting the BLL session.
 
         Return:
         True if session started, False if session was already started.
@@ -117,6 +118,9 @@ class StcHttp(object):
         params = {'userid': user_name, 'sessionname': session_name}
         if analytics not in (None, ''):
             params['analytics'] = str(analytics).lower()
+
+        if start_timeout:
+            params['start_timeout'] = str(start_timeout)
         try:
             status, data = self._rest.post_request('sessions', None, params)
         except resthttp.RestHttpError as e:

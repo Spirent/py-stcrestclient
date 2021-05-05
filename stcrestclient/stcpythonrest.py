@@ -198,7 +198,7 @@ class StcPythonRest(object):
                           {'ResultDataSet': rdsHandle})
 
     def new_session(self, server=None, session_name=None, user_name=None,
-                    existing_session=None):
+                    existing_session=None, start_timeout=None):
         """Create a new session or attach to existing.
 
         Normally, this function is called automatically, and gets its parameter
@@ -223,6 +223,7 @@ class StcPythonRest(object):
                             from EXISTING_SESSION environment variable.  If not
                             set to recognized value, raise exception if session
                             already exists.
+        start_timeout    -- Optional STC session start timeout in seconds
 
         See also: stchttp.StcHttp(), stchttp.new_session()
 
@@ -271,7 +272,7 @@ class StcPythonRest(object):
                 return self._stc
 
         # Create a new session, raise exception if session already exists.
-        self._stc.new_session(user_name, session_name, False)
+        self._stc.new_session(user_name, session_name, False, start_timeout)
         return self._stc
 
     def _check_session(self):
