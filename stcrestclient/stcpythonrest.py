@@ -32,8 +32,14 @@ class StcPythonRest(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, session_start_timeout=None):
+        """Initialize the python rest wrapper object.
+
+        Arguments:
+        session_start_timeout -- Number of seconds to wait for the STC session to start.
+        """
         self._stc = None
+        self._session_start_timeout = session_start_timeout
         atexit.register(self._end_session)
 
     def apply(self):
@@ -198,7 +204,7 @@ class StcPythonRest(object):
                           {'ResultDataSet': rdsHandle})
 
     def new_session(self, server=None, session_name=None, user_name=None,
-                    existing_session=None, start_timeout=None):
+                    existing_session=None, session_start_timeout=None):
         """Create a new session or attach to existing.
 
         Normally, this function is called automatically, and gets its parameter
@@ -223,7 +229,9 @@ class StcPythonRest(object):
                             from EXISTING_SESSION environment variable.  If not
                             set to recognized value, raise exception if session
                             already exists.
-        start_timeout    -- Optional STC session start timeout in seconds
+        session_start_timeout -- Optional STC session start timeout in seconds.
+                            If unspecified, and a session_start_timeout value was
+                            specified in the constructor, that value will be used.
 
         See also: stchttp.StcHttp(), stchttp.new_session()
 
@@ -249,6 +257,9 @@ class StcPythonRest(object):
             except:
                 pass
 
+        if not session_start_timeout:
+            session_start_timeout = self._session_start_timeout
+
         if not existing_session:
             # Try to get existing_session from environ if not passed in.
             existing_session = os.environ.get('EXISTING_SESSION')
@@ -257,12 +268,12 @@ class StcPythonRest(object):
             existing_session = existing_session.lower()
             if existing_session == 'kill':
                 # Kill any existing session and create a new one.
-                self._stc.new_session(user_name, session_name, True)
+                self._stc.new_session(user_name, session_name, True, session_start_timeout=session_start_timeout)
                 return self._stc
             if existing_session == 'join':
                 # Create a new session, or join if already exists.
                 try:
-                    self._stc.new_session(user_name, session_name, False)
+                    self._stc.new_session(user_name, session_name, False, session_start_timeout=session_start_timeout)
                 except RuntimeError as e:
                     if str(e).find('already exists') >= 0:
                         sid = ' - '.join((session_name, user_name))
@@ -272,7 +283,7 @@ class StcPythonRest(object):
                 return self._stc
 
         # Create a new session, raise exception if session already exists.
-        self._stc.new_session(user_name, session_name, False, start_timeout)
+        self._stc.new_session(user_name, session_name, False, session_start_timeout=session_start_timeout)
         return self._stc
 
     def _check_session(self):

@@ -35,7 +35,7 @@ class StcHttp(object):
     """
 
     def __init__(self, server=None, port=None, api_version=1,
-                 debug_print=False, timeout=None):
+                 debug_print=False, timeout=None, session_start_timeout=None):
         """Initialize the REST API wrapper object.
 
         If the port to connect to is not specified by the port argument, or by
@@ -43,12 +43,13 @@ class StcHttp(object):
         DEFAULT_PORT.
 
         Arguments:
-        server      -- STC REST API server to connect to. None to use environ.
-        port        -- HTTP port to connect to server on.  Use environment
+        server        -- STC REST API server to connect to. None to use environ.
+        port          -- HTTP port to connect to server on.  Use environment
                        variable STC_SERVER_PORT or DEFAULT_PORT if None.
-        api_version -- What API version to use.
-        debug_print -- Enable debug print statements.
-        timeout     -- Number of seconds to wait for a response.
+        api_version   -- What API version to use.
+        debug_print   -- Enable debug print statements.
+        timeout       -- Number of seconds to wait for a response.
+        session_start_timeout -- Number of seconds to wait for the STC session to start.
 
         """
         if not server:
@@ -74,6 +75,7 @@ class StcHttp(object):
         self._rest = rest
         self._sid = None
         self._api_ver = None
+        self._session_start_timeout = session_start_timeout
 
     def session_id(self):
         return self._sid
@@ -87,7 +89,7 @@ class StcHttp(object):
         self._rest.set_timeout(timeout)
 
     def new_session(self, user_name=None, session_name=None,
-                    kill_existing=False, analytics=None, start_timeout=None):
+                    kill_existing=False, analytics=None, session_start_timeout=None):
         """Create a new test session.
 
         The test session is identified by the specified user_name and optional
@@ -103,7 +105,9 @@ class StcHttp(object):
         analytics     -- Optional boolean value to disable or enable analytics
                          for new session.  None will use setting configured on
                          server.
-        start_timeout -- Optional timeout in seconds for starting the BLL session.
+        session_start_timeout -- Optional timeout in seconds for starting the STC session.
+                         If not specified, and a value was specified in the constructor,
+                         that value will be used.
 
         Return:
         True if session started, False if session was already started.
@@ -119,8 +123,12 @@ class StcHttp(object):
         if analytics not in (None, ''):
             params['analytics'] = str(analytics).lower()
 
-        if start_timeout:
-            params['start_timeout'] = str(start_timeout)
+        if not session_start_timeout:
+            session_start_timeout = self._session_start_timeout
+
+        if session_start_timeout:
+            params['start_timeout'] = str(session_start_timeout)
+
         try:
             status, data = self._rest.post_request('sessions', None, params)
         except resthttp.RestHttpError as e:
