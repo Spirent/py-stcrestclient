@@ -278,6 +278,7 @@ class RestHttp(object):
         explicitly, requests do not time out.
 
         """
+        resource = resource.replace("\\", "/")
         url = self.make_url(container, resource)
         if not save_path:
             save_path = resource.split('/')[-1]
