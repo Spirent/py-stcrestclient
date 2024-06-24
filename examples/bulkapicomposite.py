@@ -22,7 +22,7 @@ Operator      Meaning         Examples
 
 
 
-def createBulkPort(stc):
+def bulkapi_create_ports(stc):
     # Create four ports in this example
     result = stc.bulkcreate('port', 
         [
@@ -49,7 +49,7 @@ def createBulkPort(stc):
         ])
     print("Create Four Ports:", result)
 
-def createBulkDevicesWithBGP(stc):
+def bulkapi_create_devices_with_bgp(stc):
     # Create two emulateddevices with AffiliationPort to be port1 and port2
     result = stc.bulkcreate('emulateddevice', 
         [{
@@ -109,7 +109,7 @@ def createBulkDevicesWithBGP(stc):
     print("Create Emulateddevices and BGPs together:", result)
 
 
-def createBulkDevicesUsingXpath(stc):
+def bulkapi_create_devices_using_xpath(stc):
     # Create two emulateddevices using xpath to set AffiliationPort-targets
     result = stc.bulkcreate('emulateddevice', 
         [{
@@ -134,7 +134,7 @@ def createBulkDevicesUsingXpath(stc):
 		    vlanif=[{'vlanid': 105}, {'vlanid': 106}])
     print("Create IF objects under emulateddevices:", result)
 
-def bulkApiQuery(stc):
+def bulkapi_get(stc):
     # Get All attributes of the port whose location contains 192.168.2.1
     result = stc.bulkget("port[@location*='192.168.2.1']")
     print("==>Result1:", result)
@@ -145,24 +145,24 @@ def bulkApiQuery(stc):
     result = stc.bulkget("BgpRouterConfig", ["Name", "AsNum"])
     print("==>Result3:", result)
     # Get Name attributes of BgpRouterConfig under emulateddevice whose name equal to "mydevd1"
-    # if depth is set to 1, only objects of BgpRouterConfig are got.
-    # if depth is set to 2, objects of BgpRouterConfig and objects under BgpRouterConfig are got.
+    # if depth is set to 1, only objects of BgpRouterConfig are retrieved.
+    # if depth is set to 2, objects of BgpRouterConfig and objects under BgpRouterConfig are retrieved.
     result = stc.bulkget("emulateddevice[name='mydevd1']/BgpRouterConfig", ["Name"], depth=2)
     print("==>Result4:", result)
 
-def bulkApiPerform(stc):
+def bulkapi_perform(stc):
     # Perform BgpAdvertiseRouteCommand using routelist: emulateddevice1 emulateddevice2
     result = stc.bulkperform("BgpAdvertiseRouteCommand", 
                         { "routelist": "xpath:emulateddevice[@name^='mydev']", 
                           "prefixfilter": "64"})
     print("==>Perform BgpAdvertiseRouteCommand:", result)
-    # Perform BgpAdvertiseRouteCommand using ObjectList: port3 port4
+    # Perform ConfigPropertiesCommand using ObjectList: port3 port4
     result = stc.bulkperform("ConfigPropertiesCommand", 
                         { "ObjectList": "xpath:port[@name^='Test']", 
                           "PropertyList": "generator.generatorConfig.schedulingMode RATE_BASED generator.generatorConfig.durationMode BURSTS"})
-    print("==>Perform BgpAdvertiseRouteCommand:", result)
+    print("==>Perform ConfigPropertiesCommand:", result)
 
-def bulkApiDelete(stc):
+def bulkapi_delete(stc):
     # bulkdelete is quite the same as bulkget. the objects filtered via xpath will be deleted
     result = stc.bulkdelete("emulateddevice[name='mydevd1']/BgpRouterConfig")
     print("Delete the BgpRouterConfig under mydevd1:", result)
@@ -180,12 +180,12 @@ if len(sys.argv) < 2:
 try:
     stc = stchttp.StcHttp(sys.argv[1])
     stc.join_session(session_id)
-    createBulkPort(stc)
-    createBulkDevicesWithBGP(stc)
-    createBulkDevicesUsingXpath(stc)
-    bulkApiQuery(stc)
-    bulkApiPerform(stc)
-    bulkApiDelete(stc)
+    bulkapi_create_ports(stc)
+    bulkapi_create_devices_with_bgp(stc)
+    bulkapi_create_devices_using_xpath(stc)
+    bulkapi_get(stc)
+    bulkapi_perform(stc)
+    bulkapi_delete(stc)
     
 except Exception as e:
     print(e, file=sys.stderr)

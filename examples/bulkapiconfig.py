@@ -22,7 +22,7 @@ Operator      Meaning         Examples
 
 
 
-def createPortsAndDevices(stc):
+def bulkapi_create_ports_and_devices(stc):
     # this is the prerequisites before making bulk config
     # Create two ports
     result = stc.bulkcreate('port', 
@@ -90,12 +90,12 @@ def createPortsAndDevices(stc):
     
     print("Prerequisites: Create Emulateddevices and BGPs finished")
 
-def updateBulkDevicesAttr(stc):
+def bulkapi_update_devices_attr(stc):
     # 'emulateddevice3', 'emulateddevice4' will be updated with the same RouterId and RouterIdStep
     result = stc.bulkconfig('emulateddevice[@name^="myDev"]', {"RouterId": "10.5.0.11", "RouterIdStep": "0.0.1.0"})
     print("Update attributes:", result)
     
-def updateBulkObjectAttr(stc):
+def bulkapi_update_objects_attr(stc):
     # the emulateddvice whose name start with "myDev"('emulateddevice3' and 'emulateddevice4' in this example) will be updated
     # the objects of Ethiiif and ipV4if under each devices will be updated too.
     result = stc.bulkconfig('emulateddevice[@name^="myDev"]',
@@ -106,7 +106,7 @@ def updateBulkObjectAttr(stc):
                            })
     print("Update attributes of objects:", result)
 
-def updateBulkAttrsSeparately(stc):
+def bulkapi_update_attrs_separately(stc):
     # port[0]/emulateddevice will have all emulateddevices under port1 filtered out(Here are emulateddevice1 and emulateddevice3).
     # emulateddevice1 will be updated using the first item in list below.
     # emulateddevice3 will be updated using the second item in the list below.
@@ -117,7 +117,7 @@ def updateBulkAttrsSeparately(stc):
           ])
     print("Update attributes separately using list:", result)
 
-def updateBulkBgpAttrUsingXpath(stc):
+def bulkapi_update_bgpattr_using_xpath(stc):
     # emulateddevice[@name="myBGPDevd1"]/bgprouterconfig will have bgprouterconfig1 filtered out.
     # this example will update two bgpipv4routeconfigs under bgprouterconfig1 separately using xpath.
     result = stc.bulkconfig('emulateddevice[@name="myBGPDevd1"]/bgprouterconfig',
@@ -133,7 +133,7 @@ def updateBulkBgpAttrUsingXpath(stc):
         })
     print("Update All bgpipv4routeconfig Attributes separately using xpath:", result)
 
-def updateOneBgpAttrUsingXpath(stc):
+def bulkapi_update_one_bgpattr_using_xpath(stc):
     # Two bgpipv4routeconfigs will be filtered out.
     # In this case, only one with name equal to myBGPV4_R2_B is updated.
     result = stc.bulkconfig('emulateddevice[1]',
@@ -153,12 +153,12 @@ if len(sys.argv) < 2:
 try:
     stc = stchttp.StcHttp(sys.argv[1])
     stc.join_session(session_id)
-    createPortsAndDevices(stc)
-    updateBulkDevicesAttr(stc)
-    updateBulkObjectAttr(stc)
-    updateBulkAttrsSeparately(stc)
-    updateBulkBgpAttrUsingXpath(stc)
-    updateOneBgpAttrUsingXpath(stc)
+    bulkapi_create_ports_and_devices(stc)
+    bulkapi_update_devices_attr(stc)
+    bulkapi_update_objects_attr(stc)
+    bulkapi_update_attrs_separately(stc)
+    bulkapi_update_bgpattr_using_xpath(stc)
+    bulkapi_update_one_bgpattr_using_xpath(stc)
     
 except Exception as e:
     print(e, file=sys.stderr)
