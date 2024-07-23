@@ -8,7 +8,7 @@ except ImportError:
 def main():
     setup(
         name='stcrestclient',
-        version= '1.9.2',
+        version= '1.9.3',
         author='Spirent',
         author_email='support@spirent.com',
         url='https://github.com/Spirent/py-stcrestclient',

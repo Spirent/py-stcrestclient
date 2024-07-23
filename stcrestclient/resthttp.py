@@ -503,7 +503,7 @@ class RestHttp(object):
             print('    %s: %s' % (k, v))
         if params:
             print('  --- Params ---')
-            print('   ', params)
+            print('   ', {key:'******' if key.lower() == 'password' else value for key, value in params.items()})
 
     def bulk_get_request(self, container, resource=None, query_items=None, depth=1, 
                     accept=None, to_lower=False):
